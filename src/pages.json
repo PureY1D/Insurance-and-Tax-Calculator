@@ -1,0 +1,24 @@
+{
+  "pages": [
+    {"path": "pages/index/index", "style": {"navigationBarTitleText": "简易模式"}},
+    {"path": "pages/learning/index", "style": {"navigationBarTitleText": "学习模式"}},
+    {"path": "pages/config/list", "style": {"navigationBarTitleText": "配置"}}
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "ITC",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f7fa"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#2d8cf0",
+    "borderStyle": "white",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {"pagePath": "pages/index/index", "text": "简易"},
+      {"pagePath": "pages/learning/index", "text": "学习"},
+      {"pagePath": "pages/config/list", "text": "配置"}
+    ]
+  }
+}
