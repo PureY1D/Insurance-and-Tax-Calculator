@@ -30,7 +30,7 @@
         <view class="card">
           <text class="title">计算结果</text>
           <view class="big">
-            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{sr.takeHome}}</text></view>
+            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{takeHome}}</text></view>
             <view class="bi"><text class="bl">个人社保</text><text class="bv red">{{sr.pt}}</text></view>
           </view>
           <text class="st">📝 详细计算过程</text>
@@ -64,7 +64,7 @@
             <text class="dc">税前工资: {{input.salary}} 元</text>
             <text class="dc">个人社保: -{{sr.pt}} 元</text>
             <text class="dc">预估个税: -{{tr.monthlyTax}} 元</text>
-            <text class="dhl">到手工资: {{sr.takeHome}} 元</text>
+            <text class="dhl">到手工资: {{takeHome}} 元</text>
           </view>
         </view>
       </view>
@@ -183,8 +183,8 @@ export default {
   data() {
     return {
       tab: 0, sub: 0,
-      cfg: null,
-      input: null
+      cfg: loadConfig(),
+      input: loadInput()
     }
   },
   computed: {
@@ -195,17 +195,16 @@ export default {
         (parseFloat(this.input.tElder)||0)+(parseFloat(this.input.tBaby)||0))*12
     },
     sr() {
-      if (!this.cfg || !this.input) return { base:'0.00',fundBase:'0.00',ep:'0.00',em:'0.00',eu:'0.00',ei:'0.00',ef:'0.00',et:'0.00',pp:'0.00',pm:'0.00',pu:'0.00',pf:'0.00',pt:'0.00',yearPt:'0.00',takeHome:'0.00' }
+      if (!this.cfg || !this.input) return { base:'0.00',fundBase:'0.00',ep:'0.00',em:'0.00',eu:'0.00',ei:'0.00',ef:'0.00',et:'0.00',pp:'0.00',pm:'0.00',pu:'0.00',pf:'0.00',pt:'0.00',yearPt:'0.00',ptNum:0 }
       var salary = parseFloat(this.input.salary) || 0
       var fundBase = parseFloat(this.input.fundBase) || 0
       var fundRate = parseFloat(this.input.fundRate) || 5
       var res = calcSocial(salary, fundBase || salary, fundRate, this.cfg)
-      var takeHome = calcTakeHome(salary, res.pt, parseFloat(this.tr.monthlyTax) || 0)
       return {
         base: fmt(res.base), fundBase: fmt(res.fundBase),
         ep: fmt(res.ep), em: fmt(res.em), eu: fmt(res.eu), ei: fmt(res.ei), ef: fmt(res.ef), et: fmt(res.et),
         pp: fmt(res.pp), pm: fmt(res.pm), pu: fmt(res.pu), pf: fmt(res.pf), pt: fmt(res.pt),
-        yearPt: fmt(res.yearPt), takeHome: fmt(takeHome)
+        yearPt: fmt(res.yearPt), ptNum: res.pt
       }
     },
     fr() {
@@ -215,7 +214,7 @@ export default {
     },
     tr() {
       if (!this.cfg || !this.input) return { totalTax:'0.00',monthlyTax:'0.00',comprehensiveIncome:'0.00',comprehensiveDeduction:'0.00',comprehensiveTaxable:'0.00',comprehensiveTax:'0.00',comprehensiveBracket:'',businessTax:'0.00',proportionalTax:'0.00' }
-      var socialYear = parseFloat(this.sr.yearPt) || 0
+      var socialYear = this.sr.ptNum ? this.sr.ptNum * 12 : 0
       var res = calcTax({
         salary: (parseFloat(this.input.tSalary)||0)*12,
         labor: (parseFloat(this.input.tLabor)||0)*12,
@@ -245,6 +244,12 @@ export default {
         comprehensiveBracket: res.comprehensiveBracket,
         businessTax: fmt(res.businessTax), proportionalTax: fmt(res.proportionalTax)
       }
+    },
+    takeHome() {
+      var salary = parseFloat(this.input.salary) || 0
+      var pt = this.sr.ptNum || 0
+      var monthlyTax = parseFloat(this.tr.monthlyTax) || 0
+      return fmt(calcTakeHome(salary, pt, monthlyTax))
     }
   },
   onLoad() {

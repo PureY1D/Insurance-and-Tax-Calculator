@@ -128,7 +128,7 @@
 import { loadConfig, saveConfig, resetConfig } from '../../utils/store'
 
 export default {
-  data() { return { cfg: null } },
+  data() { return { cfg: loadConfig() } },
   onLoad() { this.cfg = loadConfig() },
   onShow() { this.cfg = loadConfig() },
   methods: {
