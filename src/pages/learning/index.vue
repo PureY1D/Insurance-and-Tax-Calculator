@@ -15,9 +15,10 @@
       <view v-if="sub===0">
         <view class="card">
           <text class="title">输入参数</text>
-          <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" :value="salary" @input="salary=$event.detail.value"/><text class="ut">元/月</text></view>
-          <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" :value="fundRate" @input="fundRate=$event.detail.value"/><text class="ut">%</text></view>
-          <view class="info"><text>💡 基数范围：{{cfg.social.baseMin}} ~ {{cfg.social.baseMax}} 元</text></view>
+          <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" :value="input.salary" @input="onSalaryInput"/><text class="ut">元/月</text></view>
+          <view class="row"><text class="lbl">公积金基数</text><input class="ipt" type="digit" :value="input.fundBase" @input="onFundBaseInput" placeholder="默认等于工资"/><text class="ut">元</text></view>
+          <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" :value="input.fundRate" @input="onFundRateInput"/><text class="ut">%</text></view>
+          <view class="info"><text>💡 社保基数范围：{{cfg.social.baseMin}} ~ {{cfg.social.baseMax}} 元</text></view>
         </view>
 
         <view class="card">
@@ -29,15 +30,17 @@
         <view class="card">
           <text class="title">计算结果</text>
           <view class="big">
-            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{sr.home}}</text></view>
-            <view class="bi"><text class="bl">个人扣除</text><text class="bv red">{{sr.pt}}</text></view>
+            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{sr.takeHome}}</text></view>
+            <view class="bi"><text class="bl">个人社保</text><text class="bv red">{{sr.pt}}</text></view>
           </view>
           <text class="st">📝 详细计算过程</text>
           <view class="det">
             <text class="dh">【基数确定】</text>
-            <text class="dc">输入工资: {{salary}} 元</text>
-            <text class="dc">上下限: {{cfg.social.baseMin}} ~ {{cfg.social.baseMax}}</text>
-            <text class="dhl">→ 实际基数: {{sr.base}} 元</text>
+            <text class="dc">输入工资: {{input.salary}} 元</text>
+            <text class="dc">社保基数上下限: {{cfg.social.baseMin}} ~ {{cfg.social.baseMax}}</text>
+            <text class="dhl">→ 实际社保基数: {{sr.base}} 元</text>
+            <text class="dc" v-if="input.fundBase">公积金基数: {{sr.fundBase}} 元（单独设置）</text>
+            <text class="dc" v-else>公积金基数: {{sr.base}} 元（等于社保基数）</text>
           </view>
           <view class="det">
             <text class="dh">【单位缴费】</text>
@@ -45,22 +48,23 @@
             <text class="dc">医疗 = {{sr.base}} × {{cfg.social.employerMedical}}% = {{sr.em}} 元</text>
             <text class="dc">失业 = {{sr.base}} × {{cfg.social.employerUnemployment}}% = {{sr.eu}} 元</text>
             <text class="dc">工伤 = {{sr.base}} × {{cfg.social.employerInjury}}% = {{sr.ei}} 元</text>
-            <text class="dc">公积金 = {{sr.base}} × {{fundRate}}% = {{sr.ef}} 元</text>
-            <text class="dhl">合计: {{sr.et}} 元</text>
+            <text class="dc">公积金 = {{sr.fundBase}} × {{input.fundRate}}% = {{sr.ef}} 元</text>
+            <text class="dhl">单位合计: {{sr.et}} 元</text>
           </view>
           <view class="det">
             <text class="dh">【个人缴费】</text>
             <text class="dc">养老 = {{sr.base}} × {{cfg.social.employeePension}}% = {{sr.pp}} 元</text>
             <text class="dc">医疗 = {{sr.base}} × {{cfg.social.employeeMedical}}% = {{sr.pm}} 元</text>
             <text class="dc">失业 = {{sr.base}} × {{cfg.social.employeeUnemployment}}% = {{sr.pu}} 元</text>
-            <text class="dc">公积金 = {{sr.base}} × {{fundRate}}% = {{sr.pf}} 元</text>
-            <text class="dhl">合计: {{sr.pt}} 元</text>
+            <text class="dc">公积金 = {{sr.fundBase}} × {{input.fundRate}}% = {{sr.pf}} 元</text>
+            <text class="dhl">个人合计: {{sr.pt}} 元/月，{{sr.yearPt}} 元/年</text>
           </view>
           <view class="det">
-            <text class="dh">【最终结果】</text>
-            <text class="dc">税前工资: {{salary}} 元</text>
-            <text class="dc">个人五险一金: -{{sr.pt}} 元</text>
-            <text class="dhl">到手工资: {{sr.home}} 元</text>
+            <text class="dh">【到手工资】</text>
+            <text class="dc">税前工资: {{input.salary}} 元</text>
+            <text class="dc">个人社保: -{{sr.pt}} 元</text>
+            <text class="dc">预估个税: -{{tr.monthlyTax}} 元</text>
+            <text class="dhl">到手工资: {{sr.takeHome}} 元</text>
           </view>
         </view>
       </view>
@@ -68,9 +72,9 @@
       <view v-if="sub===1">
         <view class="card">
           <text class="title">灵活就业社保</text>
-          <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" :value="flexBase" @input="flexBase=$event.detail.value"/><text class="ut">元</text></view>
-          <view class="row"><text class="lbl">养老比例</text><input class="ipt" type="digit" :value="flexPen" @input="flexPen=$event.detail.value"/><text class="ut">%</text></view>
-          <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" :value="flexMed" @input="flexMed=$event.detail.value"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" :value="input.flexBase" @input="onFlexBaseInput"/><text class="ut">元</text></view>
+          <view class="row"><text class="lbl">养老比例</text><input class="ipt" type="digit" :value="input.flexPen" @input="onFlexPenInput"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" :value="input.flexMed" @input="onFlexMedInput"/><text class="ut">%</text></view>
         </view>
         <view class="card">
           <text class="title">计算结果</text>
@@ -84,35 +88,35 @@
     <view v-if="tab===1" class="body">
       <view class="card">
         <text class="title">综合所得（元/月）</text>
-        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="tSalary=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="tLabor=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="tAuthor=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="tRoyalty=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="input.tSalary" @input="onTSalaryInput"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="input.tLabor" @input="onInput('tLabor',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="input.tAuthor" @input="onInput('tAuthor',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="input.tRoyalty" @input="onInput('tRoyalty',$event)"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">其他所得（元/年）</text>
-        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="tBusiness=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="tDividend=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="tRent=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="tTransfer=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="tLuck=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="input.tBusiness" @input="onInput('tBusiness',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="input.tDividend" @input="onInput('tDividend',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="input.tRent" @input="onInput('tRent',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="input.tTransfer" @input="onInput('tTransfer',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="input.tLuck" @input="onInput('tLuck',$event)"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">扣除项目</text>
-        <view class="row"><text class="lbl">五险一金/年</text><input class="ipt" type="digit" :value="tSocial" @input="tSocial=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="tChild=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="tEdu=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="tLoan=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="tRentDeduction=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="tElder=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="tBaby=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{sr.yearPt}} 元</text><text class="sync">自动同步</text></view>
+        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="input.tChild" @input="onInput('tChild',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="input.tEdu" @input="onInput('tEdu',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="input.tLoan" @input="onInput('tLoan',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="input.tRentDeduction" @input="onInput('tRentDeduction',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="input.tElder" @input="onInput('tElder',$event)"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="input.tBaby" @input="onInput('tBaby',$event)"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">📖 计算流程</text>
-        <view class="proc"><text>① 汇总综合所得收入额\n  工资 + 劳务×80% + 稿酬×80%×70% + 特许权×80%\n② 减除费用60,000元/年\n③ 减除个人五险一金\n④ 减除专项附加扣除\n⑤ 得出应纳税所得额，查综合税率表\n⑥ 加上经营所得税\n⑦ 加上各项比例税率所得税\n⑧ 得到年度总个税</text></view>
+        <view class="proc"><text>① 综合所得 = 工资 + 劳务×80% + 稿酬×80%×70% + 特许权×80%\n② 应纳税所得额 = 综合所得 - 60,000 - 个人社保 - 专项附加\n③ 查综合所得税率表\n④ 加上经营所得税\n⑤ 加上比例税率所得（20%）\n⑥ = 年度总个税</text></view>
       </view>
 
       <view class="card">
@@ -123,19 +127,19 @@
         </view>
 
         <view class="det">
-          <text class="dh">【综合所得计算】</text>
-          <text class="dc">工资薪金: {{fmt((parseFloat(tSalary)||0)*12)}} 元</text>
-          <text class="dc">劳务报酬: {{fmt((parseFloat(tLabor)||0)*12*0.8)}} 元 (×80%)</text>
-          <text class="dc">稿酬所得: {{fmt((parseFloat(tAuthor)||0)*12*0.8*0.7)}} 元 (×80%×70%)</text>
-          <text class="dc">特许权使用费: {{fmt((parseFloat(tRoyalty)||0)*12*0.8)}} 元 (×80%)</text>
+          <text class="dh">【综合所得】</text>
+          <text class="dc">工资薪金: {{fmt((parseFloat(input.tSalary)||0)*12)}} 元/年</text>
+          <text class="dc">劳务报酬: {{fmt((parseFloat(input.tLabor)||0)*12*0.8)}} 元 (×80%)</text>
+          <text class="dc">稿酬所得: {{fmt((parseFloat(input.tAuthor)||0)*12*0.8*0.7)}} 元 (×80%×70%)</text>
+          <text class="dc">特许权使用费: {{fmt((parseFloat(input.tRoyalty)||0)*12*0.8)}} 元 (×80%)</text>
           <text class="dhl">综合所得合计: {{tr.comprehensiveIncome}} 元</text>
         </view>
 
         <view class="det">
           <text class="dh">【扣除项目】</text>
           <text class="dc">基本减除: 60,000 元</text>
-          <text class="dc">五险一金: {{fmt(parseFloat(tSocial)||0)}} 元</text>
-          <text class="dc">专项附加扣除: {{fmt(specialTotal)}} 元</text>
+          <text class="dc">个人社保: {{sr.yearPt}} 元（自动同步）</text>
+          <text class="dc">专项附加: {{fmt(specialTotal)}} 元</text>
           <text class="dhl">扣除合计: {{tr.comprehensiveDeduction}} 元</text>
         </view>
 
@@ -143,21 +147,6 @@
           <text class="dh">【综合所得税】</text>
           <text class="dc">应纳税所得额 = {{tr.comprehensiveIncome}} - {{tr.comprehensiveDeduction}} = {{tr.comprehensiveTaxable}} 元</text>
           <text class="dhl">综合所得税: {{tr.comprehensiveTax}} 元 (税率{{tr.comprehensiveBracket}})</text>
-        </view>
-
-        <view class="det">
-          <text class="dh">【经营所得税】</text>
-          <text class="dc">经营所得: {{fmt(parseFloat(tBusiness)||0)}} 元</text>
-          <text class="dhl">经营所得税: {{tr.businessTax}} 元</text>
-        </view>
-
-        <view class="det">
-          <text class="dh">【比例税率所得】</text>
-          <text class="dc">利息股息红利: {{fmt(parseFloat(tDividend)||0)}} × 20% = {{tr.dividendTax}} 元</text>
-          <text class="dc">财产租赁: {{fmt(parseFloat(tRent)||0)}} × 20% = {{tr.rentTax}} 元</text>
-          <text class="dc">财产转让: {{fmt(parseFloat(tTransfer)||0)}} × 20% = {{tr.transferTax}} 元</text>
-          <text class="dc">偶然所得: {{fmt(parseFloat(tLuck)||0)}} × 20% = {{tr.luckTax}} 元</text>
-          <text class="dhl">比例税率税合计: {{tr.proportionalTax}} 元</text>
         </view>
 
         <view class="det">
@@ -178,23 +167,8 @@
             <view class="tr"><text class="td w1">4</text><text class="td w2">300,000~420,000</text><text class="td w3">25%</text><text class="td w4">31,920</text></view>
             <view class="tr"><text class="td w1">5</text><text class="td w2">420,000~660,000</text><text class="td w3">30%</text><text class="td w4">52,920</text></view>
             <view class="tr"><text class="td w1">6</text><text class="td w2">660,000~960,000</text><text class="td w3">35%</text><text class="td w4">85,920</text></view>
-            <view class="tr"><text class="td w1">7</text><text class="td w2">>960,000</text><text class="td w3">45%</text><text class="td w4">181,920</text></view>
+            <view class="tr"><text class="td w1">7</text><text class="td w2">>960,000</text><text class="td w4">45%</text><text class="td w4">181,920</text></view>
           </view>
-        </view>
-        <view class="know">
-          <text class="kt">🏷️ 经营所得税率表</text>
-          <view class="tbl">
-            <view class="tr hd"><text class="td w1">级数</text><text class="td w2">应纳税所得额</text><text class="td w3">税率</text><text class="td w4">速算扣除</text></view>
-            <view class="tr"><text class="td w1">1</text><text class="td w2">≤30,000</text><text class="td w3">5%</text><text class="td w4">0</text></view>
-            <view class="tr"><text class="td w1">2</text><text class="td w2">30,000~90,000</text><text class="td w3">10%</text><text class="td w4">1,500</text></view>
-            <view class="tr"><text class="td w1">3</text><text class="td w2">90,000~300,000</text><text class="td w3">20%</text><text class="td w4">10,500</text></view>
-            <view class="tr"><text class="td w1">4</text><text class="td w2">300,000~500,000</text><text class="td w3">30%</text><text class="td w4">40,500</text></view>
-            <view class="tr"><text class="td w1">5</text><text class="td w2">>500,000</text><text class="td w3">35%</text><text class="td w4">65,500</text></view>
-          </view>
-        </view>
-        <view class="know">
-          <text class="kt">🏷️ 比例税率所得 (20%)</text>
-          <text class="kc">• 利息、股息、红利所得\n• 财产租赁所得\n• 财产转让所得\n• 偶然所得</text>
         </view>
       </view>
     </view>
@@ -202,69 +176,104 @@
 </template>
 
 <script>
-import { loadConfig } from '../../utils/store'
-import { calcSocial, calcFlex, calcTax, fmt } from '../../utils/calc'
+import { loadConfig, loadInput, saveInput } from '../../utils/store'
+import { calcSocial, calcFlex, calcTax, calcTakeHome, fmt } from '../../utils/calc'
 
 export default {
   data() {
     return {
-      tab: 0, sub: 0, cfg: null,
-      salary: '10000', fundRate: '5',
-      flexBase: '4986', flexPen: '20', flexMed: '8',
-      tSalary: '10000', tLabor: '0', tAuthor: '0', tRoyalty: '0',
-      tBusiness: '0', tDividend: '0', tRent: '0', tTransfer: '0', tLuck: '0',
-      tSocial: '0', tChild: '0', tEdu: '0', tLoan: '0',
-      tRentDeduction: '0', tElder: '0', tBaby: '0'
+      tab: 0, sub: 0,
+      cfg: null,
+      input: null
     }
   },
   computed: {
     specialTotal() {
-      return ((parseFloat(this.tChild)||0) + (parseFloat(this.tEdu)||0) +
-        (parseFloat(this.tLoan)||0) + (parseFloat(this.tRentDeduction)||0) +
-        (parseFloat(this.tElder)||0) + (parseFloat(this.tBaby)||0)) * 12
+      if (!this.input) return 0
+      return ((parseFloat(this.input.tChild)||0)+(parseFloat(this.input.tEdu)||0)+
+        (parseFloat(this.input.tLoan)||0)+(parseFloat(this.input.tRentDeduction)||0)+
+        (parseFloat(this.input.tElder)||0)+(parseFloat(this.input.tBaby)||0))*12
     },
     sr() {
-      if (!this.cfg) return {}
-      var res = calcSocial(parseFloat(this.salary) || 0, parseFloat(this.fundRate) || 5, this.cfg)
+      if (!this.cfg || !this.input) return { base:'0.00',fundBase:'0.00',ep:'0.00',em:'0.00',eu:'0.00',ei:'0.00',ef:'0.00',et:'0.00',pp:'0.00',pm:'0.00',pu:'0.00',pf:'0.00',pt:'0.00',yearPt:'0.00',takeHome:'0.00' }
+      var salary = parseFloat(this.input.salary) || 0
+      var fundBase = parseFloat(this.input.fundBase) || 0
+      var fundRate = parseFloat(this.input.fundRate) || 5
+      var res = calcSocial(salary, fundBase || salary, fundRate, this.cfg)
+      var takeHome = calcTakeHome(salary, res.pt, parseFloat(this.tr.monthlyTax) || 0)
       return {
-        base: fmt(res.base), home: fmt(res.home), pt: fmt(res.pt),
+        base: fmt(res.base), fundBase: fmt(res.fundBase),
         ep: fmt(res.ep), em: fmt(res.em), eu: fmt(res.eu), ei: fmt(res.ei), ef: fmt(res.ef), et: fmt(res.et),
-        pp: fmt(res.pp), pm: fmt(res.pm), pu: fmt(res.pu), pf: fmt(res.pf)
+        pp: fmt(res.pp), pm: fmt(res.pm), pu: fmt(res.pu), pf: fmt(res.pf), pt: fmt(res.pt),
+        yearPt: fmt(res.yearPt), takeHome: fmt(takeHome)
       }
     },
     fr() {
-      if (!this.cfg) return {}
-      var res = calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
+      if (!this.cfg || !this.input) return { t:'0.00',p:'0.00',m:'0.00' }
+      var res = calcFlex(parseFloat(this.input.flexBase)||0, parseFloat(this.input.flexPen)||20, parseFloat(this.input.flexMed)||8, this.cfg)
       return { t: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
     },
     tr() {
-      if (!this.cfg) return {}
+      if (!this.cfg || !this.input) return { totalTax:'0.00',monthlyTax:'0.00',comprehensiveIncome:'0.00',comprehensiveDeduction:'0.00',comprehensiveTaxable:'0.00',comprehensiveTax:'0.00',comprehensiveBracket:'',businessTax:'0.00',proportionalTax:'0.00' }
+      var socialYear = parseFloat(this.sr.yearPt) || 0
       var res = calcTax({
-        salary: (parseFloat(this.tSalary)||0)*12, labor: (parseFloat(this.tLabor)||0)*12,
-        author: (parseFloat(this.tAuthor)||0)*12, royalty: (parseFloat(this.tRoyalty)||0)*12,
-        business: parseFloat(this.tBusiness)||0, dividend: parseFloat(this.tDividend)||0,
-        rent: parseFloat(this.tRent)||0, rentDeduction: 0,
-        transfer: parseFloat(this.tTransfer)||0, transferCost: 0,
-        luck: parseFloat(this.tLuck)||0, social: parseFloat(this.tSocial)||0,
-        childEducation: (parseFloat(this.tChild)||0)*12, continuingEducation: (parseFloat(this.tEdu)||0)*12,
-        housingLoan: (parseFloat(this.tLoan)||0)*12, housingRent: (parseFloat(this.tRentDeduction)||0)*12,
-        elderlySupport: (parseFloat(this.tElder)||0)*12, infantCare: (parseFloat(this.tBaby)||0)*12
+        salary: (parseFloat(this.input.tSalary)||0)*12,
+        labor: (parseFloat(this.input.tLabor)||0)*12,
+        author: (parseFloat(this.input.tAuthor)||0)*12,
+        royalty: (parseFloat(this.input.tRoyalty)||0)*12,
+        business: parseFloat(this.input.tBusiness)||0,
+        dividend: parseFloat(this.input.tDividend)||0,
+        rent: parseFloat(this.input.tRent)||0,
+        rentDeduction: 0,
+        transfer: parseFloat(this.input.tTransfer)||0,
+        transferCost: 0,
+        luck: parseFloat(this.input.tLuck)||0,
+        social: socialYear,
+        childEducation: (parseFloat(this.input.tChild)||0)*12,
+        continuingEducation: (parseFloat(this.input.tEdu)||0)*12,
+        housingLoan: (parseFloat(this.input.tLoan)||0)*12,
+        housingRent: (parseFloat(this.input.tRentDeduction)||0)*12,
+        elderlySupport: (parseFloat(this.input.tElder)||0)*12,
+        infantCare: (parseFloat(this.input.tBaby)||0)*12
       }, this.cfg)
       return {
         totalTax: fmt(res.totalTax), monthlyTax: fmt(res.monthlyTax),
-        comprehensiveIncome: fmt(res.comprehensiveIncome), comprehensiveDeduction: fmt(res.comprehensiveDeduction),
-        comprehensiveTaxable: fmt(res.comprehensiveTaxable), comprehensiveTax: fmt(res.comprehensiveTax),
+        comprehensiveIncome: fmt(res.comprehensiveIncome),
+        comprehensiveDeduction: fmt(res.comprehensiveDeduction),
+        comprehensiveTaxable: fmt(res.comprehensiveTaxable),
+        comprehensiveTax: fmt(res.comprehensiveTax),
         comprehensiveBracket: res.comprehensiveBracket,
-        businessTax: fmt(res.businessTax),
-        dividendTax: fmt(res.dividendTax), rentTax: fmt(res.rentTax),
-        transferTax: fmt(res.transferTax), luckTax: fmt(res.luckTax),
-        proportionalTax: fmt(res.proportionalTax)
+        businessTax: fmt(res.businessTax), proportionalTax: fmt(res.proportionalTax)
       }
     }
   },
-  onLoad() { this.cfg = loadConfig() },
-  onShow() { this.cfg = loadConfig() },
-  methods: { fmt: fmt }
+  onLoad() {
+    this.cfg = loadConfig()
+    this.input = loadInput()
+  },
+  onShow() {
+    this.cfg = loadConfig()
+  },
+  methods: {
+    fmt: fmt,
+    save() { saveInput(this.input) },
+    onSalaryInput(e) {
+      this.input.salary = e.detail.value
+      this.input.tSalary = e.detail.value
+      this.save()
+    },
+    onFundBaseInput(e) { this.input.fundBase = e.detail.value; this.save() },
+    onFundRateInput(e) { this.input.fundRate = e.detail.value; this.save() },
+    onFlexBaseInput(e) { this.input.flexBase = e.detail.value; this.save() },
+    onFlexPenInput(e) { this.input.flexPen = e.detail.value; this.save() },
+    onFlexMedInput(e) { this.input.flexMed = e.detail.value; this.save() },
+    onTSalaryInput(e) {
+      this.input.tSalary = e.detail.value
+      this.input.salary = e.detail.value
+      this.save()
+    },
+    onInput(key, e) { this.input[key] = e.detail.value; this.save() }
+  }
 }
 </script>
 
@@ -285,6 +294,8 @@ export default {
 .lbl{width:180rpx;font-size:28rpx;color:#666}
 .ipt{flex:1;height:80rpx;border:2rpx solid #e5e5e5;border-radius:8rpx;padding:0 16rpx;font-size:28rpx}
 .ut{font-size:24rpx;color:#999;margin-left:12rpx}
+.val{flex:1;font-size:28rpx;color:#2d8cf0;font-weight:bold}
+.sync{font-size:22rpx;color:#999;background:#f0f0f0;padding:4rpx 12rpx;border-radius:8rpx;margin-left:12rpx}
 .info{background:#fffbe6;border:2rpx solid #ffe58f;border-radius:8rpx;padding:16rpx;margin:16rpx 0;font-size:24rpx;color:#8c6e00}
 .big{display:flex;justify-content:space-around;padding:20rpx 0;border-bottom:2rpx solid #f0f0f0;margin-bottom:20rpx}
 .bi{text-align:center}

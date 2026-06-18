@@ -13,28 +13,64 @@
 
       <text class="st">单位缴费比例 (%)</text>
       <view class="r2">
-        <view class="hf"><text class="ls">养老保险</text><input class="is" type="digit" :value="cfg.social.employerPension" @input="onSocialInput('employerPension',$event)"/></view>
-        <view class="hf"><text class="ls">医疗保险</text><input class="is" type="digit" :value="cfg.social.employerMedical" @input="onSocialInput('employerMedical',$event)"/></view>
+        <view class="hf">
+          <text class="ls">养老保险</text>
+          <input class="is" type="digit" :value="cfg.social.employerPension" @input="onSocialInput('employerPension',$event)"/>
+          <text class="hint">法定: 14%~16%</text>
+        </view>
+        <view class="hf">
+          <text class="ls">医疗保险</text>
+          <input class="is" type="digit" :value="cfg.social.employerMedical" @input="onSocialInput('employerMedical',$event)"/>
+          <text class="hint">法定: 7%~9%</text>
+        </view>
       </view>
       <view class="r2">
-        <view class="hf"><text class="ls">失业保险</text><input class="is" type="digit" :value="cfg.social.employerUnemployment" @input="onSocialInput('employerUnemployment',$event)"/></view>
-        <view class="hf"><text class="ls">工伤保险</text><input class="is" type="digit" :value="cfg.social.employerInjury" @input="onSocialInput('employerInjury',$event)"/></view>
+        <view class="hf">
+          <text class="ls">失业保险</text>
+          <input class="is" type="digit" :value="cfg.social.employerUnemployment" @input="onSocialInput('employerUnemployment',$event)"/>
+          <text class="hint">法定: 0.3%~0.8%</text>
+        </view>
+        <view class="hf">
+          <text class="ls">工伤保险</text>
+          <input class="is" type="digit" :value="cfg.social.employerInjury" @input="onSocialInput('employerInjury',$event)"/>
+          <text class="hint">法定: 0.2%~1.9%</text>
+        </view>
       </view>
 
       <text class="st">个人缴费比例 (%)</text>
       <view class="r2">
-        <view class="hf"><text class="ls">养老保险</text><input class="is" type="digit" :value="cfg.social.employeePension" @input="onSocialInput('employeePension',$event)"/></view>
-        <view class="hf"><text class="ls">医疗保险</text><input class="is" type="digit" :value="cfg.social.employeeMedical" @input="onSocialInput('employeeMedical',$event)"/></view>
+        <view class="hf">
+          <text class="ls">养老保险</text>
+          <input class="is" type="digit" :value="cfg.social.employeePension" @input="onSocialInput('employeePension',$event)"/>
+          <text class="hint">法定: 8%</text>
+        </view>
+        <view class="hf">
+          <text class="ls">医疗保险</text>
+          <input class="is" type="digit" :value="cfg.social.employeeMedical" @input="onSocialInput('employeeMedical',$event)"/>
+          <text class="hint">法定: 2%</text>
+        </view>
       </view>
       <view class="r2">
-        <view class="hf"><text class="ls">失业保险</text><input class="is" type="digit" :value="cfg.social.employeeUnemployment" @input="onSocialInput('employeeUnemployment',$event)"/></view>
+        <view class="hf">
+          <text class="ls">失业保险</text>
+          <input class="is" type="digit" :value="cfg.social.employeeUnemployment" @input="onSocialInput('employeeUnemployment',$event)"/>
+          <text class="hint">法定: 0.5%</text>
+        </view>
         <view class="hf"></view>
       </view>
 
       <text class="st">公积金 (%)</text>
       <view class="r2">
-        <view class="hf"><text class="ls">最低比例</text><input class="is" type="digit" :value="cfg.social.fundMin" @input="onSocialInput('fundMin',$event)"/></view>
-        <view class="hf"><text class="ls">最高比例</text><input class="is" type="digit" :value="cfg.social.fundMax" @input="onSocialInput('fundMax',$event)"/></view>
+        <view class="hf">
+          <text class="ls">最低比例</text>
+          <input class="is" type="digit" :value="cfg.social.fundMin" @input="onSocialInput('fundMin',$event)"/>
+          <text class="hint">法定: 5%</text>
+        </view>
+        <view class="hf">
+          <text class="ls">最高比例</text>
+          <input class="is" type="digit" :value="cfg.social.fundMax" @input="onSocialInput('fundMax',$event)"/>
+          <text class="hint">法定: 12%</text>
+        </view>
       </view>
     </view>
 
@@ -48,8 +84,16 @@
       </view>
       <text class="st">缴费比例 (%)</text>
       <view class="r2">
-        <view class="hf"><text class="ls">养老保险</text><input class="is" type="digit" :value="cfg.flexible.pensionRate" @input="onFlexibleInput('pensionRate',$event)"/></view>
-        <view class="hf"><text class="ls">医疗保险</text><input class="is" type="digit" :value="cfg.flexible.medicalRate" @input="onFlexibleInput('medicalRate',$event)"/></view>
+        <view class="hf">
+          <text class="ls">养老保险</text>
+          <input class="is" type="digit" :value="cfg.flexible.pensionRate" @input="onFlexibleInput('pensionRate',$event)"/>
+          <text class="hint">法定: 20%~28%</text>
+        </view>
+        <view class="hf">
+          <text class="ls">医疗保险</text>
+          <input class="is" type="digit" :value="cfg.flexible.medicalRate" @input="onFlexibleInput('medicalRate',$event)"/>
+          <text class="hint">法定: 8%~12%</text>
+        </view>
       </view>
     </view>
 
@@ -136,6 +180,7 @@ export default {
 .hf{flex:1}
 .ls{display:block;font-size:24rpx;color:#666;margin-bottom:8rpx}
 .is{width:100%;height:64rpx;border:2rpx solid #e5e5e5;border-radius:8rpx;padding:0 12rpx;font-size:26rpx;box-sizing:border-box}
+.hint{display:block;font-size:20rpx;color:#999;margin-top:4rpx}
 .rst{background:#f56c6c;height:80rpx;border-radius:12rpx;display:flex;align-items:center;justify-content:center}
 .rst-t{color:#fff;font-size:28rpx;font-weight:bold}
 </style>

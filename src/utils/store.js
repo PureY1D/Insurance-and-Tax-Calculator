@@ -1,9 +1,10 @@
-// 简化存储 - 单配置，自动保存
+// 存储服务 - 配置 + 输入数据缓存
 
-var KEY = 'itc_v4_config'
+var CONFIG_KEY = 'itc_v4_config'
+var INPUT_KEY = 'itc_v4_input'
 
-var DEFAULT = {
-  // 社保参数
+// 默认配置（宁波2024）
+var DEFAULT_CONFIG = {
   social: {
     baseMin: 4986,
     baseMax: 38907,
@@ -17,17 +18,14 @@ var DEFAULT = {
     fundMin: 5,
     fundMax: 12
   },
-  // 灵活就业参数
   flexible: {
     baseMin: 4986,
     baseMax: 38907,
     pensionRate: 20,
     medicalRate: 8
   },
-  // 个税参数
   tax: {
     basicDeduction: 60000,
-    // 综合所得税率表
     brackets: [
       { min: 0, max: 36000, rate: 3, deduction: 0 },
       { min: 36000, max: 144000, rate: 10, deduction: 2520 },
@@ -37,7 +35,6 @@ var DEFAULT = {
       { min: 660000, max: 960000, rate: 35, deduction: 85920 },
       { min: 960000, max: null, rate: 45, deduction: 181920 }
     ],
-    // 经营所得税率表
     businessBrackets: [
       { min: 0, max: 30000, rate: 5, deduction: 0 },
       { min: 30000, max: 90000, rate: 10, deduction: 1500 },
@@ -45,7 +42,6 @@ var DEFAULT = {
       { min: 300000, max: 500000, rate: 30, deduction: 40500 },
       { min: 500000, max: null, rate: 35, deduction: 65500 }
     ],
-    // 专项附加扣除（元/月）
     special: {
       childEducation: 0,
       continuingEducation: 0,
@@ -57,40 +53,73 @@ var DEFAULT = {
   }
 }
 
-// 加载配置
+// 默认输入数据
+var DEFAULT_INPUT = {
+  // 社保页输入
+  salary: '10000',
+  fundBase: '',      // 空表示等于工资
+  fundRate: '5',
+  // 灵活就业
+  flexBase: '4986',
+  flexPen: '20',
+  flexMed: '8',
+  // 个税页输入
+  tSalary: '10000',  // 与社保页工资同步
+  tLabor: '0',
+  tAuthor: '0',
+  tRoyalty: '0',
+  tBusiness: '0',
+  tDividend: '0',
+  tRent: '0',
+  tTransfer: '0',
+  tLuck: '0',
+  tChild: '0',
+  tEdu: '0',
+  tLoan: '0',
+  tRentDeduction: '0',
+  tElder: '0',
+  tBaby: '0'
+}
+
+// 配置相关
 export function loadConfig() {
   try {
-    var str = uni.getStorageSync(KEY)
-    if (str) {
-      var cfg = JSON.parse(str)
-      // 合并默认值，确保所有字段存在
-      return mergeConfig(DEFAULT, cfg)
-    }
+    var str = uni.getStorageSync(CONFIG_KEY)
+    if (str) return mergeConfig(DEFAULT_CONFIG, JSON.parse(str))
   } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT))
+  return JSON.parse(JSON.stringify(DEFAULT_CONFIG))
 }
 
-// 保存配置
 export function saveConfig(cfg) {
-  try {
-    uni.setStorageSync(KEY, JSON.stringify(cfg))
-  } catch (e) {}
+  try { uni.setStorageSync(CONFIG_KEY, JSON.stringify(cfg)) } catch (e) {}
 }
 
-// 合并配置（保留用户修改，补充缺失字段）
-function mergeConfig(defaultCfg, userCfg) {
+export function resetConfig() {
+  saveConfig(JSON.parse(JSON.stringify(DEFAULT_CONFIG)))
+}
+
+// 输入数据相关
+export function loadInput() {
+  try {
+    var str = uni.getStorageSync(INPUT_KEY)
+    if (str) return JSON.parse(str)
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_INPUT))
+}
+
+export function saveInput(input) {
+  try { uni.setStorageSync(INPUT_KEY, JSON.stringify(input)) } catch (e) {}
+}
+
+// 合并配置
+function mergeConfig(def, user) {
   var result = {}
-  for (var key in defaultCfg) {
-    if (typeof defaultCfg[key] === 'object' && !Array.isArray(defaultCfg[key])) {
-      result[key] = mergeConfig(defaultCfg[key], userCfg[key] || {})
+  for (var key in def) {
+    if (typeof def[key] === 'object' && !Array.isArray(def[key])) {
+      result[key] = mergeConfig(def[key], user[key] || {})
     } else {
-      result[key] = userCfg[key] !== undefined ? userCfg[key] : defaultCfg[key]
+      result[key] = user[key] !== undefined ? user[key] : def[key]
     }
   }
   return result
-}
-
-// 恢复默认
-export function resetConfig() {
-  saveConfig(JSON.parse(JSON.stringify(DEFAULT)))
 }
