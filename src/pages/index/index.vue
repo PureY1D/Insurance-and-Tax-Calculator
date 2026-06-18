@@ -13,89 +13,97 @@
       </view>
 
       <!-- 企业职工 -->
-      <view v-show="sub===0" class="card">
-        <text class="title">企业职工五险一金</text>
-        <view class="row">
-          <text class="lbl">税前工资</text>
-          <input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/>
-          <text class="ut">元/月</text>
+      <view v-show="sub===0">
+        <view class="card">
+          <text class="title">输入参数</text>
+          <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/><text class="ut">元/月</text></view>
+
+          <view class="check-row" @click="toggleFund">
+            <view class="checkbox">
+              <text v-if="hasFund" class="checked">✓</text>
+            </view>
+            <text class="check-label">缴纳公积金</text>
+          </view>
+
+          <view v-if="hasFund">
+            <view class="row"><text class="lbl">公积金基数</text><input class="ipt" type="digit" :value="fundBase" @input="onFundBaseInput" placeholder="默认等于工资"/><text class="ut">元</text></view>
+            <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" :value="fundRate" @input="onFundRateInput"/><text class="ut">%</text></view>
+            <view class="info"><text>💡 社保基数范围：{{cfg.social.baseMin}} ~ {{cfg.social.baseMax}} 元</text></view>
+            <view class="info"><text>💡 公积金基数范围：{{cfg.social.fundBaseMin}} ~ {{cfg.social.fundBaseMax}} 元</text></view>
+          </view>
         </view>
 
-        <view class="check-row" @click="toggleSocial">
-          <view class="checkbox">
-            <text v-if="hasSocial" class="checked">✓</text>
-          </view>
-          <text class="check-label">缴纳五险一金</text>
+        <view class="card">
+          <text class="title">📖 政策说明</text>
+          <view class="know"><text class="kt">缴费基数规则</text><text class="kc">根据《社会保险法》第六十条：\n• 用人单位应按时足额缴纳社保费\n• 缴费基数为职工工资总额\n• 有上下限限制</text></view>
+          <view v-if="hasFund" class="know"><text class="kt">公积金基数规则</text><text class="kc">根据《住房公积金管理条例》：\n• 公积金基数 = 职工上一年度月平均工资\n• 基数下限: {{cfg.social.fundBaseMin}} 元（最低工资）\n• 基数上限: {{cfg.social.fundBaseMax}} 元（社平工资3倍）\n• 与社保基数可能不同</text></view>
+          <view v-if="hasFund" class="know"><text class="kt">当前配置比例</text><text class="kc">单位：养老{{cfg.social.employerPension}}% 医疗{{cfg.social.employerMedical}}% 失业{{cfg.social.employerUnemployment}}% 工伤{{cfg.social.employerInjury}}%\n个人：养老{{cfg.social.employeePension}}% 医疗{{cfg.social.employeeMedical}}% 失业{{cfg.social.employeeUnemployment}}%</text></view>
         </view>
 
-        <view v-if="hasSocial">
-          <view class="row">
-            <text class="lbl">公积金基数</text>
-            <input class="ipt" type="digit" :value="fundBase" @input="onFundBaseInput" placeholder="默认等于工资"/>
-            <text class="ut">元</text>
+        <view v-if="showResult" class="card">
+          <text class="title">计算结果</text>
+          <view class="big">
+            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{result.takeHome}}</text></view>
+            <view class="bi"><text class="bl">个人社保</text><text class="bv red">{{result.pt}}</text></view>
           </view>
-          <view class="row">
-            <text class="lbl">公积金比例</text>
-            <input class="ipt" type="digit" :value="fundRate" @input="onFundRateInput"/>
-            <text class="ut">%</text>
-          </view>
-          <view class="info">
-            <text>💡 社保基数范围：{{cfg.social.baseMin}} ~ {{cfg.social.baseMax}} 元</text>
-          </view>
-          <view class="info">
-            <text>💡 公积金基数范围：{{cfg.social.fundBaseMin}} ~ {{cfg.social.fundBaseMax}} 元</text>
-          </view>
-        </view>
-      </view>
 
-      <!-- 企业职工结果 -->
-      <view v-if="showResult" class="card">
-        <text class="title">计算结果</text>
-        <view class="big">
-          <view class="bi"><text class="bl">到手工资</text><text class="bv">{{result.takeHome}}</text></view>
-          <view class="bi"><text class="bl">个人社保</text><text class="bv">{{result.pt}}</text></view>
-        </view>
-        <view v-if="hasSocial" class="lst">
-          <view class="li"><text>单位养老</text><text>{{result.ep}}</text></view>
-          <view class="li"><text>单位医疗</text><text>{{result.em}}</text></view>
-          <view class="li"><text>单位失业</text><text>{{result.eu}}</text></view>
-          <view class="li"><text>单位工伤</text><text>{{result.ei}}</text></view>
-          <view class="li"><text>单位公积金</text><text>{{result.ef}}</text></view>
-          <view class="li"><text>个人养老</text><text>{{result.pp}}</text></view>
-          <view class="li"><text>个人医疗</text><text>{{result.pm}}</text></view>
-          <view class="li"><text>个人失业</text><text>{{result.pu}}</text></view>
-          <view class="li"><text>个人公积金</text><text>{{result.pf}}</text></view>
-          <view class="li hl"><text>预估月个税</text><text>{{result.monthlyTax}}</text></view>
+          <view v-if="hasFund">
+            <text class="st">📝 详细计算过程</text>
+            <view class="det">
+              <text class="dh">【基数确定】</text>
+              <text class="dc">输入工资: {{salary}} 元</text>
+              <text class="dc">社保基数上下限: {{cfg.social.baseMin}} ~ {{cfg.social.baseMax}}</text>
+              <text class="dhl">→ 实际社保基数: {{result.base}} 元</text>
+              <text class="dc" v-if="fundBase">公积金基数: {{result.fb}} 元（单独设置）</text>
+              <text class="dc" v-else>公积金基数: {{result.base}} 元（等于工资）</text>
+              <text class="dc">公积金基数范围: {{cfg.social.fundBaseMin}} ~ {{cfg.social.fundBaseMax}}</text>
+            </view>
+            <view class="det">
+              <text class="dh">【单位缴费】</text>
+              <text class="dc">养老 = {{result.base}} × {{cfg.social.employerPension}}% = {{result.ep}} 元</text>
+              <text class="dc">医疗 = {{result.base}} × {{cfg.social.employerMedical}}% = {{result.em}} 元</text>
+              <text class="dc">失业 = {{result.base}} × {{cfg.social.employerUnemployment}}% = {{result.eu}} 元</text>
+              <text class="dc">工伤 = {{result.base}} × {{cfg.social.employerInjury}}% = {{result.ei}} 元</text>
+              <text class="dc">公积金 = {{result.fb}} × {{fundRate || cfg.social.fundRateMin}}% = {{result.ef}} 元</text>
+              <text class="dhl">单位合计: {{result.et}} 元</text>
+            </view>
+            <view class="det">
+              <text class="dh">【个人缴费】</text>
+              <text class="dc">养老 = {{result.base}} × {{cfg.social.employeePension}}% = {{result.pp}} 元</text>
+              <text class="dc">医疗 = {{result.base}} × {{cfg.social.employeeMedical}}% = {{result.pm}} 元</text>
+              <text class="dc">失业 = {{result.base}} × {{cfg.social.employeeUnemployment}}% = {{result.pu}} 元</text>
+              <text class="dc">公积金 = {{result.fb}} × {{fundRate || cfg.social.fundRateMin}}% = {{result.pf}} 元</text>
+              <text class="dhl">个人合计: {{result.pt}} 元/月，{{result.yearPt}} 元/年</text>
+            </view>
+            <view class="det">
+              <text class="dh">【到手工资】</text>
+              <text class="dc">税前工资: {{salary}} 元</text>
+              <text class="dc">个人社保: -{{result.pt}} 元</text>
+              <text class="dc">预估个税: -{{result.monthlyTax}} 元</text>
+              <text class="dhl">到手工资: {{result.takeHome}} 元</text>
+            </view>
+          </view>
         </view>
       </view>
 
       <!-- 灵活就业 -->
-      <view v-show="sub===1" class="card">
-        <text class="title">灵活就业社保</text>
-        <view class="row">
-          <text class="lbl">缴费基数</text>
-          <input class="ipt" type="digit" :value="flexBase" @input="onFlexBaseInput"/>
-          <text class="ut">元</text>
+      <view v-show="sub===1">
+        <view class="card">
+          <text class="title">灵活就业社保</text>
+          <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" :value="flexBase" @input="onFlexBaseInput"/><text class="ut">元</text></view>
+          <view class="row"><text class="lbl">养老比例</text><input class="ipt" type="digit" :value="flexPen" @input="onFlexPenInput"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" :value="flexMed" @input="onFlexMedInput"/><text class="ut">%</text></view>
         </view>
-        <view class="row">
-          <text class="lbl">养老比例</text>
-          <input class="ipt" type="digit" :value="flexPen" @input="onFlexPenInput"/>
-          <text class="ut">%</text>
-        </view>
-        <view class="row">
-          <text class="lbl">医保比例</text>
-          <input class="ipt" type="digit" :value="flexMed" @input="onFlexMedInput"/>
-          <text class="ut">%</text>
-        </view>
-      </view>
 
-      <!-- 灵活就业结果 -->
-      <view v-if="showFlexResult && sub===1" class="card">
-        <text class="title">灵活就业缴费结果</text>
-        <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{flexResult.total}}</text></view></view>
-        <view class="lst">
-          <view class="li"><text>养老保险</text><text>{{flexResult.p}}</text></view>
-          <view class="li"><text>医疗保险</text><text>{{flexResult.m}}</text></view>
+        <view class="card">
+          <text class="title">📖 灵活就业说明</text>
+          <view class="know"><text class="kt">缴费规则</text><text class="kc">灵活就业人员社保缴费规则：\n• 缴费基数可在当地社平工资的60%~300%之间选择\n• 养老保险：一般20%（8%进入个人账户，12%进入统筹）\n• 医疗保险：各地不同，一般8%~12%\n• 失业保险：部分地区可选</text></view>
+        </view>
+
+        <view v-if="showFlexResult" class="card">
+          <text class="title">灵活就业缴费结果</text>
+          <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{flexResult.total}}</text></view></view>
+          <view class="lst"><view class="li"><text>养老保险</text><text>{{flexResult.p}}</text></view><view class="li"><text>医疗保险</text><text>{{flexResult.m}}</text></view></view>
         </view>
       </view>
     </view>
@@ -130,18 +138,60 @@
         <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="onTBabyInput"/><text class="ut">元</text></view>
       </view>
 
-      <!-- 个税结果 -->
+      <view class="card">
+        <text class="title">📖 计算流程</text>
+        <view class="proc"><text>① 综合所得 = 工资 + 劳务×80% + 稿酬×80%×70% + 特许权×80%\n② 应纳税所得额 = 综合所得 - 60,000 - 个人社保 - 专项附加\n③ 查综合所得税率表\n④ 加上经营所得税\n⑤ 加上比例税率所得（20%）\n⑥ = 年度总个税</text></view>
+      </view>
+
       <view v-if="showTaxResult" class="card">
         <text class="title">计算结果</text>
         <view class="big">
           <view class="bi"><text class="bl">年度总个税</text><text class="bv">{{taxResult.totalTax}}</text></view>
           <view class="bi"><text class="bl">月均个税</text><text class="bv red">{{taxResult.monthlyTax}}</text></view>
         </view>
-        <view class="lst">
-          <view class="li"><text>应纳税所得额</text><text>{{taxResult.taxableIncome}}</text></view>
-          <view class="li"><text>综合所得税</text><text>{{taxResult.comprehensiveTax}}</text></view>
-          <view class="li"><text>经营所得税</text><text>{{taxResult.businessTax}}</text></view>
-          <view class="li"><text>比例税率税</text><text>{{taxResult.proportionalTax}}</text></view>
+
+        <view class="det">
+          <text class="dh">【综合所得】</text>
+          <text class="dc">工资薪金: {{fmt(tSalary * 12)}} 元/年</text>
+          <text class="dc">劳务报酬: {{fmt(tLabor * 12 * 0.8)}} 元 (×80%)</text>
+          <text class="dc">稿酬所得: {{fmt(tAuthor * 12 * 0.8 * 0.7)}} 元 (×80%×70%)</text>
+          <text class="dc">特许权使用费: {{fmt(tRoyalty * 12 * 0.8)}} 元 (×80%)</text>
+          <text class="dhl">综合所得合计: {{taxResult.comprehensiveIncome}} 元</text>
+        </view>
+
+        <view class="det">
+          <text class="dh">【扣除项目】</text>
+          <text class="dc">基本减除: 60,000 元</text>
+          <text class="dc">个人社保: {{yearSocial}} 元（自动同步）</text>
+          <text class="dhl">扣除合计: {{taxResult.comprehensiveDeduction}} 元</text>
+        </view>
+
+        <view class="det">
+          <text class="dh">【综合所得税】</text>
+          <text class="dc">应纳税所得额 = {{taxResult.comprehensiveIncome}} - {{taxResult.comprehensiveDeduction}} = {{taxResult.taxableIncome}} 元</text>
+          <text class="dhl">综合所得税: {{taxResult.comprehensiveTax}} 元 (税率{{taxResult.comprehensiveBracket}})</text>
+        </view>
+
+        <view class="det">
+          <text class="dh">【最终结果】</text>
+          <text class="dhl">年度总个税 = {{taxResult.comprehensiveTax}} + {{taxResult.businessTax}} + {{taxResult.proportionalTax}} = {{taxResult.totalTax}} 元</text>
+        </view>
+      </view>
+
+      <view class="card">
+        <text class="title">📖 政策参考</text>
+        <view class="know">
+          <text class="kt">🏷️ 综合所得税率表</text>
+          <view class="tbl">
+            <view class="tr hd"><text class="td w1">级数</text><text class="td w2">应纳税所得额</text><text class="td w3">税率</text><text class="td w4">速算扣除</text></view>
+            <view class="tr"><text class="td w1">1</text><text class="td w2">≤36,000</text><text class="td w3">3%</text><text class="td w4">0</text></view>
+            <view class="tr"><text class="td w1">2</text><text class="td w2">36,000~144,000</text><text class="td w3">10%</text><text class="td w4">2,520</text></view>
+            <view class="tr"><text class="td w1">3</text><text class="td w2">144,000~300,000</text><text class="td w3">20%</text><text class="td w4">16,920</text></view>
+            <view class="tr"><text class="td w1">4</text><text class="td w2">300,000~420,000</text><text class="td w3">25%</text><text class="td w4">31,920</text></view>
+            <view class="tr"><text class="td w1">5</text><text class="td w2">420,000~660,000</text><text class="td w3">30%</text><text class="td w4">52,920</text></view>
+            <view class="tr"><text class="td w1">6</text><text class="td w2">660,000~960,000</text><text class="td w3">35%</text><text class="td w4">85,920</text></view>
+            <view class="tr"><text class="td w1">7</text><text class="td w2">>960,000</text><text class="td w4">45%</text><text class="td w4">181,920</text></view>
+          </view>
         </view>
       </view>
     </view>
@@ -158,7 +208,7 @@ export default {
       tab: 0,
       sub: 0,
       cfg: null,
-      hasSocial: false,
+      hasFund: false,
       salary: '',
       fundBase: '',
       fundRate: '',
@@ -185,13 +235,15 @@ export default {
       showFlexResult: false,
       showTaxResult: false,
       result: {
-        takeHome: '0', pt: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0',
-        pp: '0', pm: '0', pu: '0', pf: '0', monthlyTax: '0'
+        base: '0', fb: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', et: '0',
+        pp: '0', pm: '0', pu: '0', pf: '0', pt: '0', yearPt: '0',
+        takeHome: '0', monthlyTax: '0'
       },
       flexResult: { total: '0', p: '0', m: '0' },
       taxResult: {
-        totalTax: '0', monthlyTax: '0', taxableIncome: '0',
-        comprehensiveTax: '0', businessTax: '0', proportionalTax: '0'
+        totalTax: '0', monthlyTax: '0', comprehensiveIncome: '0',
+        comprehensiveDeduction: '0', taxableIncome: '0', comprehensiveTax: '0',
+        comprehensiveBracket: '', businessTax: '0', proportionalTax: '0'
       }
     }
   },
@@ -210,10 +262,11 @@ export default {
     this.doCalcTax()
   },
   methods: {
+    fmt: fmt,
     loadData: function() {
       var inp = loadInput()
       var cfg = this.cfg
-      this.hasSocial = inp.hasSocial === 'true'
+      this.hasFund = inp.hasFund === 'true'
       this.salary = inp.salary || ''
       this.fundBase = inp.fundBase || ''
       this.fundRate = inp.fundRate || ''
@@ -242,8 +295,8 @@ export default {
     switchSub: function(index) {
       this.sub = index
     },
-    toggleSocial: function() {
-      this.hasSocial = !this.hasSocial
+    toggleFund: function() {
+      this.hasFund = !this.hasFund
       this.doCalc()
       this.save()
     },
@@ -303,31 +356,44 @@ export default {
     doCalc: function() {
       if (!this.cfg) return
       var s = parseFloat(this.salary) || 0
-      if (this.hasSocial) {
+      if (this.hasFund) {
         var fb = parseFloat(this.fundBase) || s
         var fr = parseFloat(this.fundRate) || this.cfg.social.fundRateMin
         var social = calcSocial(s, fb, fr, this.cfg)
         this.yearSocial = fmt(social.yearPt)
         var tax = calcTax({
-          salary: s * 12, labor: 0, author: 0, royalty: 0,
-          business: 0, dividend: 0, rent: 0, rentDeduction: 0,
-          transfer: 0, transferCost: 0, luck: 0, social: social.yearPt,
-          childEducation: 0, continuingEducation: 0, housingLoan: 0,
-          housingRent: 0, elderlySupport: 0, infantCare: 0
+          salary: (parseFloat(this.tSalary) || 0) * 12,
+          labor: (parseFloat(this.tLabor) || 0) * 12,
+          author: (parseFloat(this.tAuthor) || 0) * 12,
+          royalty: (parseFloat(this.tRoyalty) || 0) * 12,
+          business: parseFloat(this.tBusiness) || 0,
+          dividend: parseFloat(this.tDividend) || 0,
+          rent: parseFloat(this.tRent) || 0,
+          rentDeduction: 0,
+          transfer: parseFloat(this.tTransfer) || 0,
+          transferCost: 0,
+          luck: parseFloat(this.tLuck) || 0,
+          social: social.yearPt,
+          childEducation: (parseFloat(this.tChild) || 0) * 12,
+          continuingEducation: (parseFloat(this.tEdu) || 0) * 12,
+          housingLoan: (parseFloat(this.tLoan) || 0) * 12,
+          housingRent: (parseFloat(this.tRentDeduction) || 0) * 12,
+          elderlySupport: (parseFloat(this.tElder) || 0) * 12,
+          infantCare: (parseFloat(this.tBaby) || 0) * 12
         }, this.cfg)
         this.result = {
-          ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu),
-          ei: fmt(social.ei), ef: fmt(social.ef),
-          pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf),
-          pt: fmt(social.pt), takeHome: fmt(calcTakeHome(s, social.pt, tax.monthlyTax)),
+          base: fmt(social.base), fb: fmt(social.fundBase),
+          ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu), ei: fmt(social.ei), ef: fmt(social.ef), et: fmt(social.et),
+          pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf), pt: fmt(social.pt),
+          yearPt: fmt(social.yearPt), takeHome: fmt(calcTakeHome(s, social.pt, tax.monthlyTax)),
           monthlyTax: fmt(tax.monthlyTax)
         }
       } else {
         this.yearSocial = '0'
         this.result = {
-          ep: '0.00', em: '0.00', eu: '0.00', ei: '0.00', ef: '0.00',
-          pp: '0.00', pm: '0.00', pu: '0.00', pf: '0.00',
-          pt: '0.00', takeHome: fmt(s), monthlyTax: '0.00'
+          base: '0', fb: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', et: '0',
+          pp: '0', pm: '0', pu: '0', pf: '0', pt: '0', yearPt: '0',
+          takeHome: fmt(s), monthlyTax: '0'
         }
       }
       this.showResult = true
@@ -358,15 +424,18 @@ export default {
       }, this.cfg)
       this.taxResult = {
         totalTax: fmt(tax.totalTax), monthlyTax: fmt(tax.monthlyTax),
+        comprehensiveIncome: fmt(tax.comprehensiveIncome),
+        comprehensiveDeduction: fmt(tax.comprehensiveDeduction),
         taxableIncome: fmt(tax.comprehensiveTaxable),
         comprehensiveTax: fmt(tax.comprehensiveTax),
+        comprehensiveBracket: tax.comprehensiveBracket,
         businessTax: fmt(tax.businessTax), proportionalTax: fmt(tax.proportionalTax)
       }
       this.showTaxResult = true
     },
     save: function() {
       saveInput({
-        hasSocial: String(this.hasSocial),
+        hasFund: String(this.hasFund),
         salary: this.salary,
         fundBase: this.fundBase,
         fundRate: this.fundRate,
@@ -406,7 +475,7 @@ export default {
 .sub{display:block;height:72rpx;line-height:72rpx;text-align:center;font-size:28rpx;color:#666;background:#f0f2f5;border-radius:8rpx}
 .sub.on{background:#e8f3ff;color:#2d8cf0;font-weight:bold}
 .card{background:#fff;border-radius:16rpx;padding:24rpx;margin-bottom:20rpx}
-.title{display:block;font-size:32rpx;font-weight:bold;color:#333;margin-bottom:24rpx;text-align:center}
+.title{display:block;font-size:30rpx;font-weight:bold;color:#333;margin-bottom:20rpx}
 .row{display:flex;align-items:center;margin-bottom:20rpx}
 .lbl{width:180rpx;font-size:28rpx;color:#666}
 .ipt{flex:1;height:80rpx;border:2rpx solid #e5e5e5;border-radius:8rpx;padding:0 16rpx;font-size:28rpx}
@@ -425,7 +494,25 @@ export default {
 .bv.red{color:#f56c6c}
 .lst{padding:0 10rpx}
 .li{display:flex;justify-content:space-between;padding:16rpx 0;border-bottom:1rpx solid #f5f5f5;font-size:28rpx}
-.li.hl{background:#fffbe6}
 .li text:first-child{color:#666}
 .li text:last-child{color:#333}
+.st{display:block;font-size:28rpx;font-weight:bold;color:#333;margin:20rpx 0 16rpx}
+.det{background:#f8f9fa;border-radius:8rpx;padding:16rpx;margin-bottom:16rpx}
+.dh{display:block;font-size:26rpx;font-weight:bold;color:#2d8cf0;margin-bottom:12rpx}
+.dc{display:block;font-size:24rpx;color:#555;line-height:1.8}
+.dhl{display:block;font-size:24rpx;color:#2d8cf0;font-weight:bold;line-height:1.8}
+.know{background:#f0f7ff;border-radius:12rpx;padding:20rpx;margin:16rpx 0}
+.kt{display:block;font-size:26rpx;font-weight:bold;color:#2d8cf0;margin-bottom:12rpx}
+.kc{font-size:24rpx;color:#555;line-height:1.8}
+.proc{background:#f8f9fa;border-radius:8rpx;padding:16rpx}
+.proc text{font-size:24rpx;color:#555;line-height:2}
+.tbl{border:1rpx solid #e5e5e5;border-radius:8rpx;overflow:hidden}
+.tr{display:flex;border-bottom:1rpx solid #e5e5e5}
+.tr:last-child{border-bottom:none}
+.tr.hd{background:#f0f7ff}
+.td{padding:12rpx;font-size:22rpx;text-align:center}
+.w1{width:60rpx}
+.w2{flex:1}
+.w3{width:100rpx}
+.w4{width:120rpx}
 </style>

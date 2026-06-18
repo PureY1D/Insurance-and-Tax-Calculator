@@ -57,7 +57,7 @@ var DEFAULT_CONFIG = {
 
 // 默认输入数据
 var DEFAULT_INPUT = {
-  hasSocial: 'false',
+  hasFund: 'false',
   salary: '',
   fundBase: '',
   fundRate: '',
