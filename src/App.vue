@@ -1,6 +1,8 @@
 <script>
 export default {
-  onLaunch() { console.log('App Launch') }
+  onLaunch: function() {
+    console.log('ITC 4.0.1 启动')
+  }
 }
 </script>
 <style>

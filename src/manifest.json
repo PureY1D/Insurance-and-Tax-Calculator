@@ -4,20 +4,9 @@
   "description": "ITC - Insurance and Tax Calculator",
   "versionName": "4.0.1",
   "versionCode": "401",
-  "transformPx": false,
   "mp-weixin": {
     "appid": "",
-    "setting": {
-      "urlCheck": false,
-      "es6": true,
-      "enhance": true,
-      "postcss": true,
-      "minified": true
-    },
-    "usingComponents": true,
-    "optimization": {
-      "subPackages": true
-    },
-    "lazyCodeLoading": "requiredComponents"
+    "setting": {"urlCheck": false},
+    "usingComponents": true
   }
 }

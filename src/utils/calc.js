@@ -2,36 +2,27 @@
 
 function fix(n) { return Math.round(n * 100) / 100 }
 
-// 社保计算（企业职工）
-export function calcSocial(salary, fundBase, fundRate, cfg) {
+// 五险计算（默认缴纳）
+export function calcInsurance(salary, cfg) {
   var s = cfg.social
   var base = Math.max(s.baseMin, Math.min(s.baseMax, salary))
-  var fb = fundBase ? Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, fundBase)) : Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, salary))
-  var fr = Math.max(s.fundRateMin, Math.min(s.fundRateMax, fundRate))
-
-  var ep = fix(base * s.employerPension / 100)
-  var em = fix(base * s.employerMedical / 100)
-  var eu = fix(base * s.employerUnemployment / 100)
-  var ei = fix(base * s.employerInjury / 100)
-  var ef = fix(fb * fr / 100)
-  var et = fix(ep + em + eu + ei + ef)
-
   var pp = fix(base * s.employeePension / 100)
   var pm = fix(base * s.employeeMedical / 100)
   var pu = fix(base * s.employeeUnemployment / 100)
-  var pf = fix(fb * fr / 100)
-  var pt = fix(pp + pm + pu + pf)
-
-  return {
-    base: base,
-    fundBase: fb,
-    ep: ep, em: em, eu: eu, ei: ei, ef: ef, et: et,
-    pp: pp, pm: pm, pu: pu, pf: pf, pt: pt,
-    yearPt: fix(pt * 12)
-  }
+  var total = fix(pp + pm + pu)
+  return { base: base, pp: pp, pm: pm, pu: pu, total: total, yearTotal: fix(total * 12) }
 }
 
-// 灵活就业社保计算
+// 公积金计算（可选）
+export function calcFund(salary, fundBase, fundRate, cfg) {
+  var s = cfg.social
+  var base = fundBase ? Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, fundBase)) : Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, salary))
+  var rate = Math.max(s.fundRateMin, Math.min(s.fundRateMax, fundRate))
+  var pf = fix(base * rate / 100)
+  return { base: base, rate: rate, pf: pf, yearPf: fix(pf * 12) }
+}
+
+// 灵活就业计算
 export function calcFlex(base, penRate, medRate, cfg) {
   var f = cfg.flexible
   var b = Math.max(f.baseMin, Math.min(f.baseMax, base))
@@ -54,51 +45,45 @@ export function calcTax(input, cfg) {
   var transferCost = input.transferCost || 0
   var luck = input.luck || 0
   var social = input.social || 0
-  var childEducation = input.childEducation || 0
-  var continuingEducation = input.continuingEducation || 0
-  var housingLoan = input.housingLoan || 0
-  var housingRent = input.housingRent || 0
-  var elderlySupport = input.elderlySupport || 0
-  var infantCare = input.infantCare || 0
+  var special = input.special || 0
 
   var t = cfg.tax
 
+  // 综合所得
   var laborTax = fix(labor * 0.8)
   var authorTax = fix(author * 0.8 * 0.7)
   var royaltyTax = fix(royalty * 0.8)
   var comprehensiveIncome = fix(salary + laborTax + authorTax + royaltyTax)
 
-  var specialTotal = fix(childEducation + continuingEducation + housingLoan + housingRent + elderlySupport + infantCare) * 12
+  // 应纳税所得额
+  var comprehensiveTaxable = Math.max(0, fix(comprehensiveIncome - t.basicDeduction - social - special))
 
-  var comprehensiveTaxable = Math.max(0, fix(comprehensiveIncome - t.basicDeduction - social - specialTotal))
-
+  // 综合所得税
   var comprehensiveTax = 0
   var comprehensiveBracket = ''
-  var brackets = t.brackets
-  for (var i = 0; i < brackets.length; i++) {
-    if (brackets[i].max === null || comprehensiveTaxable <= brackets[i].max) {
-      comprehensiveTax = fix(comprehensiveTaxable * brackets[i].rate / 100 - brackets[i].deduction)
-      comprehensiveBracket = brackets[i].rate + '%'
+  for (var i = 0; i < t.brackets.length; i++) {
+    var b = t.brackets[i]
+    if (b.max === null || comprehensiveTaxable <= b.max) {
+      comprehensiveTax = fix(comprehensiveTaxable * b.rate / 100 - b.deduction)
+      comprehensiveBracket = b.rate + '%'
       break
     }
   }
 
+  // 经营所得税
   var businessTax = 0
-  var businessBracket = ''
-  var bBrackets = t.businessBrackets
-  for (var i = 0; i < bBrackets.length; i++) {
-    if (bBrackets[i].max === null || business <= bBrackets[i].max) {
-      businessTax = fix(business * bBrackets[i].rate / 100 - bBrackets[i].deduction)
-      businessBracket = bBrackets[i].rate + '%'
+  for (var i = 0; i < t.businessBrackets.length; i++) {
+    var b = t.businessBrackets[i]
+    if (b.max === null || business <= b.max) {
+      businessTax = fix(business * b.rate / 100 - b.deduction)
       break
     }
   }
 
+  // 比例税率
   var dividendTax = fix(dividend * 0.2)
-  var rentTaxable = Math.max(0, fix(rent - rentDeduction))
-  var rentTax = fix(rentTaxable * 0.2)
-  var transferTaxable = Math.max(0, fix(transfer - transferCost))
-  var transferTax = fix(transferTaxable * 0.2)
+  var rentTax = fix(Math.max(0, rent - rentDeduction) * 0.2)
+  var transferTax = fix(Math.max(0, transfer - transferCost) * 0.2)
   var luckTax = fix(luck * 0.2)
   var proportionalTax = fix(dividendTax + rentTax + transferTax + luckTax)
 
@@ -106,25 +91,15 @@ export function calcTax(input, cfg) {
 
   return {
     comprehensiveIncome: comprehensiveIncome,
-    comprehensiveDeduction: fix(t.basicDeduction + social + specialTotal),
+    comprehensiveDeduction: fix(t.basicDeduction + social + special),
     comprehensiveTaxable: comprehensiveTaxable,
     comprehensiveTax: comprehensiveTax,
     comprehensiveBracket: comprehensiveBracket,
-    businessIncome: business,
     businessTax: businessTax,
-    businessBracket: businessBracket,
-    dividendTax: dividendTax,
-    rentTax: rentTax,
-    transferTax: transferTax,
-    luckTax: luckTax,
     proportionalTax: proportionalTax,
     totalTax: totalTax,
     monthlyTax: fix(totalTax / 12)
   }
-}
-
-export function calcTakeHome(salary, social, monthlyTax) {
-  return fix(salary - social - monthlyTax)
 }
 
 export function fmt(n) { return fix(n).toFixed(2) }

@@ -1,30 +1,20 @@
-// 存储服务 - 配置 + 输入数据缓存
+// 存储服务
 
-var CONFIG_KEY = 'itc_v4_config'
-var INPUT_KEY = 'itc_v4_input'
+var CFG_KEY = 'itc_cfg'
+var INP_KEY = 'itc_inp'
 
 // 默认配置（宁波2026）
-var DEFAULT_CONFIG = {
+var DEFAULT_CFG = {
   social: {
-    baseMin: 4986,
-    baseMax: 38907,
-    employerPension: 14,
-    employerMedical: 7,
-    employerUnemployment: 0.3,
-    employerInjury: 0.2,
-    employeePension: 8,
-    employeeMedical: 2,
-    employeeUnemployment: 0.5,
-    fundBaseMin: 2280,
-    fundBaseMax: 36621,
-    fundRateMin: 5,
-    fundRateMax: 12
+    baseMin: 4986, baseMax: 38907,
+    employerPension: 14, employerMedical: 7, employerUnemployment: 0.3, employerInjury: 0.2,
+    employeePension: 8, employeeMedical: 2, employeeUnemployment: 0.5,
+    fundBaseMin: 2280, fundBaseMax: 36621,
+    fundRateMin: 5, fundRateMax: 12
   },
   flexible: {
-    baseMin: 4986,
-    baseMax: 38907,
-    pensionRate: 20,
-    medicalRate: 8
+    baseMin: 4986, baseMax: 38907,
+    pensionRate: 20, medicalRate: 8
   },
   tax: {
     basicDeduction: 60000,
@@ -43,83 +33,32 @@ var DEFAULT_CONFIG = {
       { min: 90000, max: 300000, rate: 20, deduction: 10500 },
       { min: 300000, max: 500000, rate: 30, deduction: 40500 },
       { min: 500000, max: null, rate: 35, deduction: 65500 }
-    ],
-    special: {
-      childEducation: 0,
-      continuingEducation: 0,
-      housingLoan: 0,
-      housingRent: 0,
-      elderlySupport: 0,
-      infantCare: 0
-    }
+    ]
   }
 }
 
-// 默认输入数据
-var DEFAULT_INPUT = {
-  hasFund: 'false',
-  salary: '',
-  fundBase: '',
-  fundRate: '',
-  flexBase: '',
-  flexPen: '',
-  flexMed: '',
-  tSalary: '',
-  tLabor: '',
-  tAuthor: '',
-  tRoyalty: '',
-  tBusiness: '',
-  tDividend: '',
-  tRent: '',
-  tTransfer: '',
-  tLuck: '',
-  tChild: '',
-  tEdu: '',
-  tLoan: '',
-  tRentDeduction: '',
-  tElder: '',
-  tBaby: ''
+// 默认输入
+var DEFAULT_INP = {
+  hasFund: false,
+  salary: '', fundBase: '', fundRate: '',
+  flexBase: '', flexPen: '', flexMed: '',
+  tSalary: '', tLabor: '', tAuthor: '', tRoyalty: '',
+  tBusiness: '', tDividend: '', tRent: '', tTransfer: '', tLuck: '',
+  tChild: '', tEdu: '', tLoan: '', tRentDeduction: '', tElder: '', tBaby: ''
 }
 
-// 配置相关
-export function loadConfig() {
-  try {
-    var str = uni.getStorageSync(CONFIG_KEY)
-    if (str) return mergeConfig(DEFAULT_CONFIG, JSON.parse(str))
-  } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_CONFIG))
+function get(key, def) {
+  try { var s = uni.getStorageSync(key); if (s) return JSON.parse(s) } catch (e) {}
+  return JSON.parse(JSON.stringify(def))
 }
 
-export function saveConfig(cfg) {
-  try { uni.setStorageSync(CONFIG_KEY, JSON.stringify(cfg)) } catch (e) {}
+function set(key, val) {
+  try { uni.setStorageSync(key, JSON.stringify(val)) } catch (e) {}
 }
 
-export function resetConfig() {
-  saveConfig(JSON.parse(JSON.stringify(DEFAULT_CONFIG)))
-}
+export function loadCfg() { return get(CFG_KEY, DEFAULT_CFG) }
+export function saveCfg(cfg) { set(CFG_KEY, cfg) }
+export function resetCfg() { set(CFG_KEY, DEFAULT_CFG) }
 
-// 输入数据相关
-export function loadInput() {
-  try {
-    var str = uni.getStorageSync(INPUT_KEY)
-    if (str) return JSON.parse(str)
-  } catch (e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_INPUT))
-}
-
-export function saveInput(input) {
-  try { uni.setStorageSync(INPUT_KEY, JSON.stringify(input)) } catch (e) {}
-}
-
-// 合并配置
-function mergeConfig(def, user) {
-  var result = {}
-  for (var key in def) {
-    if (typeof def[key] === 'object' && !Array.isArray(def[key])) {
-      result[key] = mergeConfig(def[key], user[key] || {})
-    } else {
-      result[key] = user[key] !== undefined ? user[key] : def[key]
-    }
-  }
-  return result
-}
+export function loadInp() { return get(INP_KEY, DEFAULT_INP) }
+export function saveInp(inp) { set(INP_KEY, inp) }
