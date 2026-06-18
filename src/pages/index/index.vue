@@ -115,7 +115,9 @@ export default {
       tBusiness: '0', tDividend: '0', tRent: '0', tTransfer: '0', tLuck: '0',
       yearSocial: '0', tChild: '0', tEdu: '0', tLoan: '0',
       tRentDeduction: '0', tElder: '0', tBaby: '0',
-      result: null, flexResult: null, taxResult: null
+      result: { takeHome: '0', pt: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', pp: '0', pm: '0', pu: '0', pf: '0', monthlyTax: '0' },
+      flexResult: { total: '0', p: '0', m: '0' },
+      taxResult: { totalTax: '0', monthlyTax: '0', taxableIncome: '0', comprehensiveTax: '0', businessTax: '0', proportionalTax: '0' }
     }
   },
   onLoad() {
