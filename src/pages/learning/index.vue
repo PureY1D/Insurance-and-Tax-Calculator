@@ -14,10 +14,11 @@
       <view v-show="sub===0">
         <view class="card">
           <text class="title">输入参数</text>
-          <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/><text class="ut">元/月</text></view>
-          <view class="row"><text class="lbl">公积金基数</text><input class="ipt" type="digit" :value="fundBase" @input="onFundBaseInput" placeholder="默认等于工资"/><text class="ut">元</text></view>
-          <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" :value="fundRate" @input="onFundRateInput"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" v-model.number="salary"/><text class="ut">元/月</text></view>
+          <view class="row"><text class="lbl">公积金基数</text><input class="ipt" type="digit" v-model.number="fundBase" placeholder="默认等于工资"/><text class="ut">元</text></view>
+          <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" v-model.number="fundRate"/><text class="ut">%</text></view>
           <view class="info"><text>💡 社保基数范围：{{cfg ? cfg.social.baseMin : 0}} ~ {{cfg ? cfg.social.baseMax : 0}} 元</text></view>
+          <view class="calc-btn" @click="doCalc"><text class="calc-btn-t">开始计算</text></view>
         </view>
 
         <view class="card">
@@ -71,9 +72,10 @@
       <view v-show="sub===1">
         <view class="card">
           <text class="title">灵活就业社保</text>
-          <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" :value="flexBase" @input="onFlexBaseInput"/><text class="ut">元</text></view>
-          <view class="row"><text class="lbl">养老比例</text><input class="ipt" type="digit" :value="flexPen" @input="onFlexPenInput"/><text class="ut">%</text></view>
-          <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" :value="flexMed" @input="onFlexMedInput"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" v-model.number="flexBase"/><text class="ut">元</text></view>
+          <view class="row"><text class="lbl">养老比例</text><input class="ipt" type="digit" v-model.number="flexPen"/><text class="ut">%</text></view>
+          <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" v-model.number="flexMed"/><text class="ut">%</text></view>
+          <view class="calc-btn" @click="doCalcFlex"><text class="calc-btn-t">计算</text></view>
         </view>
         <view v-if="showFlexResult" class="card">
           <text class="title">计算结果</text>
@@ -86,30 +88,31 @@
     <view v-show="tab===1" class="body">
       <view class="card">
         <text class="title">综合所得（元/月）</text>
-        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="onTSalaryInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="onTLaborInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="onTAuthorInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="onTRoyaltyInput"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" v-model.number="tSalary"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" v-model.number="tLabor"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" v-model.number="tAuthor"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" v-model.number="tRoyalty"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">其他所得（元/年）</text>
-        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="onTBusinessInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="onTDividendInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="onTRentInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="onTTransferInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="onTLuckInput"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" v-model.number="tBusiness"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" v-model.number="tDividend"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" v-model.number="tRent"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" v-model.number="tTransfer"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" v-model.number="tLuck"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">扣除项目</text>
         <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{yearSocial}} 元</text><text class="sync">自动同步</text></view>
-        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="onTChildInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="onTEduInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="onTLoanInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="onTRentDeductionInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="onTElderInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="onTBabyInput"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" v-model.number="tChild"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" v-model.number="tEdu"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" v-model.number="tLoan"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" v-model.number="tRentDeduction"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" v-model.number="tElder"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" v-model.number="tBaby"/><text class="ut">元</text></view>
+        <view class="calc-btn" @click="doCalcTax"><text class="calc-btn-t">计算年度个税</text></view>
       </view>
 
       <view class="card">
@@ -126,10 +129,10 @@
 
         <view class="det">
           <text class="dh">【综合所得】</text>
-          <text class="dc">工资薪金: {{fmt((parseFloat(tSalary)||0)*12)}} 元/年</text>
-          <text class="dc">劳务报酬: {{fmt((parseFloat(tLabor)||0)*12*0.8)}} 元 (×80%)</text>
-          <text class="dc">稿酬所得: {{fmt((parseFloat(tAuthor)||0)*12*0.8*0.7)}} 元 (×80%×70%)</text>
-          <text class="dc">特许权使用费: {{fmt((parseFloat(tRoyalty)||0)*12*0.8)}} 元 (×80%)</text>
+          <text class="dc">工资薪金: {{fmt(tSalary * 12)}} 元/年</text>
+          <text class="dc">劳务报酬: {{fmt(tLabor * 12 * 0.8)}} 元 (×80%)</text>
+          <text class="dc">稿酬所得: {{fmt(tAuthor * 12 * 0.8 * 0.7)}} 元 (×80%×70%)</text>
+          <text class="dc">特许权使用费: {{fmt(tRoyalty * 12 * 0.8)}} 元 (×80%)</text>
           <text class="dhl">综合所得合计: {{tr.comprehensiveIncome}} 元</text>
         </view>
 
@@ -180,94 +183,81 @@ export default {
   data() {
     return {
       tab: 0, sub: 0, cfg: null,
-      salary: '10000', fundBase: '', fundRate: '5',
-      flexBase: '4986', flexPen: '20', flexMed: '8',
-      tSalary: '10000', tLabor: '0', tAuthor: '0', tRoyalty: '0',
-      tBusiness: '0', tDividend: '0', tRent: '0', tTransfer: '0', tLuck: '0',
-      yearSocial: '0', tChild: '0', tEdu: '0', tLoan: '0',
-      tRentDeduction: '0', tElder: '0', tBaby: '0',
+      salary: 10000, fundBase: 0, fundRate: 5,
+      flexBase: 4986, flexPen: 20, flexMed: 8,
+      tSalary: 10000, tLabor: 0, tAuthor: 0, tRoyalty: 0,
+      tBusiness: 0, tDividend: 0, tRent: 0, tTransfer: 0, tLuck: 0,
+      yearSocial: '0', tChild: 0, tEdu: 0, tLoan: 0,
+      tRentDeduction: 0, tElder: 0, tBaby: 0,
       showResult: false, showFlexResult: false, showTaxResult: false,
       r: { base: '0', fb: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', et: '0', pp: '0', pm: '0', pu: '0', pf: '0', pt: '0', yearPt: '0', takeHome: '0', monthlyTax: '0' },
       fr: { total: '0', p: '0', m: '0' },
       tr: { totalTax: '0', monthlyTax: '0', comprehensiveIncome: '0', comprehensiveDeduction: '0', taxableIncome: '0', comprehensiveTax: '0', comprehensiveBracket: '', businessTax: '0', proportionalTax: '0' }
     }
   },
+  watch: {
+    salary() { this.doCalc() },
+    fundBase() { this.doCalc() },
+    fundRate() { this.doCalc() },
+    flexBase() { this.doCalcFlex() },
+    flexPen() { this.doCalcFlex() },
+    flexMed() { this.doCalcFlex() }
+  },
   onLoad() {
     this.cfg = loadConfig()
     var inp = loadInput()
-    this.salary = inp.salary || '10000'
-    this.tSalary = inp.tSalary || '10000'
-    this.fundRate = inp.fundRate || '5'
-    this.fundBase = inp.fundBase || ''
-    this.flexBase = inp.flexBase || '4986'
-    this.flexPen = inp.flexPen || '20'
-    this.flexMed = inp.flexMed || '8'
-    this.tLabor = inp.tLabor || '0'
-    this.tAuthor = inp.tAuthor || '0'
-    this.tRoyalty = inp.tRoyalty || '0'
-    this.tBusiness = inp.tBusiness || '0'
-    this.tDividend = inp.tDividend || '0'
-    this.tRent = inp.tRent || '0'
-    this.tTransfer = inp.tTransfer || '0'
-    this.tLuck = inp.tLuck || '0'
-    this.tChild = inp.tChild || '0'
-    this.tEdu = inp.tEdu || '0'
-    this.tLoan = inp.tLoan || '0'
-    this.tRentDeduction = inp.tRentDeduction || '0'
-    this.tElder = inp.tElder || '0'
-    this.tBaby = inp.tBaby || '0'
+    this.salary = parseFloat(inp.salary) || 10000
+    this.tSalary = parseFloat(inp.tSalary) || 10000
+    this.fundRate = parseFloat(inp.fundRate) || 5
+    this.fundBase = parseFloat(inp.fundBase) || 0
+    this.flexBase = parseFloat(inp.flexBase) || 4986
+    this.flexPen = parseFloat(inp.flexPen) || 20
+    this.flexMed = parseFloat(inp.flexMed) || 8
+    this.tLabor = parseFloat(inp.tLabor) || 0
+    this.tAuthor = parseFloat(inp.tAuthor) || 0
+    this.tRoyalty = parseFloat(inp.tRoyalty) || 0
+    this.tBusiness = parseFloat(inp.tBusiness) || 0
+    this.tDividend = parseFloat(inp.tDividend) || 0
+    this.tRent = parseFloat(inp.tRent) || 0
+    this.tTransfer = parseFloat(inp.tTransfer) || 0
+    this.tLuck = parseFloat(inp.tLuck) || 0
+    this.tChild = parseFloat(inp.tChild) || 0
+    this.tEdu = parseFloat(inp.tEdu) || 0
+    this.tLoan = parseFloat(inp.tLoan) || 0
+    this.tRentDeduction = parseFloat(inp.tRentDeduction) || 0
+    this.tElder = parseFloat(inp.tElder) || 0
+    this.tBaby = parseFloat(inp.tBaby) || 0
     this.doCalc()
     this.doCalcFlex()
   },
   methods: {
     fmt: fmt,
-    onSalaryInput(e) { this.salary = e.detail.value; this.tSalary = e.detail.value; this.doCalc() },
-    onFundBaseInput(e) { this.fundBase = e.detail.value; this.doCalc() },
-    onFundRateInput(e) { this.fundRate = e.detail.value; this.doCalc() },
-    onFlexBaseInput(e) { this.flexBase = e.detail.value; this.doCalcFlex() },
-    onFlexPenInput(e) { this.flexPen = e.detail.value; this.doCalcFlex() },
-    onFlexMedInput(e) { this.flexMed = e.detail.value; this.doCalcFlex() },
-    onTSalaryInput(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.doCalc(); this.doCalcTax() },
-    onTLaborInput(e) { this.tLabor = e.detail.value; this.doCalcTax() },
-    onTAuthorInput(e) { this.tAuthor = e.detail.value; this.doCalcTax() },
-    onTRoyaltyInput(e) { this.tRoyalty = e.detail.value; this.doCalcTax() },
-    onTBusinessInput(e) { this.tBusiness = e.detail.value; this.doCalcTax() },
-    onTDividendInput(e) { this.tDividend = e.detail.value; this.doCalcTax() },
-    onTRentInput(e) { this.tRent = e.detail.value; this.doCalcTax() },
-    onTTransferInput(e) { this.tTransfer = e.detail.value; this.doCalcTax() },
-    onTLuckInput(e) { this.tLuck = e.detail.value; this.doCalcTax() },
-    onTChildInput(e) { this.tChild = e.detail.value; this.doCalcTax() },
-    onTEduInput(e) { this.tEdu = e.detail.value; this.doCalcTax() },
-    onTLoanInput(e) { this.tLoan = e.detail.value; this.doCalcTax() },
-    onTRentDeductionInput(e) { this.tRentDeduction = e.detail.value; this.doCalcTax() },
-    onTElderInput(e) { this.tElder = e.detail.value; this.doCalcTax() },
-    onTBabyInput(e) { this.tBaby = e.detail.value; this.doCalcTax() },
     doCalc() {
       if (!this.cfg) return
-      var s = parseFloat(this.salary) || 0
-      var fb = parseFloat(this.fundBase) || s
-      var fr = parseFloat(this.fundRate) || 5
+      var s = this.salary || 0
+      var fb = this.fundBase || s
+      var fr = this.fundRate || 5
       var social = calcSocial(s, fb, fr, this.cfg)
       this.yearSocial = fmt(social.yearPt)
       var tax = calcTax({
-        salary: (parseFloat(this.tSalary)||0) * 12,
-        labor: (parseFloat(this.tLabor)||0) * 12,
-        author: (parseFloat(this.tAuthor)||0) * 12,
-        royalty: (parseFloat(this.tRoyalty)||0) * 12,
-        business: parseFloat(this.tBusiness)||0,
-        dividend: parseFloat(this.tDividend)||0,
-        rent: parseFloat(this.tRent)||0,
+        salary: (this.tSalary || 0) * 12,
+        labor: (this.tLabor || 0) * 12,
+        author: (this.tAuthor || 0) * 12,
+        royalty: (this.tRoyalty || 0) * 12,
+        business: this.tBusiness || 0,
+        dividend: this.tDividend || 0,
+        rent: this.tRent || 0,
         rentDeduction: 0,
-        transfer: parseFloat(this.tTransfer)||0,
+        transfer: this.tTransfer || 0,
         transferCost: 0,
-        luck: parseFloat(this.tLuck)||0,
+        luck: this.tLuck || 0,
         social: social.yearPt,
-        childEducation: (parseFloat(this.tChild)||0)*12,
-        continuingEducation: (parseFloat(this.tEdu)||0)*12,
-        housingLoan: (parseFloat(this.tLoan)||0)*12,
-        housingRent: (parseFloat(this.tRentDeduction)||0)*12,
-        elderlySupport: (parseFloat(this.tElder)||0)*12,
-        infantCare: (parseFloat(this.tBaby)||0)*12
+        childEducation: (this.tChild || 0) * 12,
+        continuingEducation: (this.tEdu || 0) * 12,
+        housingLoan: (this.tLoan || 0) * 12,
+        housingRent: (this.tRentDeduction || 0) * 12,
+        elderlySupport: (this.tElder || 0) * 12,
+        infantCare: (this.tBaby || 0) * 12
       }, this.cfg)
       this.r = {
         base: fmt(social.base), fb: fmt(social.fundBase),
@@ -290,24 +280,24 @@ export default {
     },
     doCalcFlex() {
       if (!this.cfg) return
-      var res = calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
+      var res = calcFlex(this.flexBase || 0, this.flexPen || 20, this.flexMed || 8, this.cfg)
       this.fr = { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
       this.showFlexResult = true
     },
     doCalcTax() {
       if (!this.cfg) return
-      var s = parseFloat(this.tSalary) || 0
+      var s = this.tSalary || 0
       var ys = parseFloat(this.yearSocial) || 0
       var tax = calcTax({
-        salary: s * 12, labor: (parseFloat(this.tLabor)||0) * 12,
-        author: (parseFloat(this.tAuthor)||0) * 12, royalty: (parseFloat(this.tRoyalty)||0) * 12,
-        business: parseFloat(this.tBusiness)||0, dividend: parseFloat(this.tDividend)||0,
-        rent: parseFloat(this.tRent)||0, rentDeduction: 0,
-        transfer: parseFloat(this.tTransfer)||0, transferCost: 0,
-        luck: parseFloat(this.tLuck)||0, social: ys,
-        childEducation: (parseFloat(this.tChild)||0)*12, continuingEducation: (parseFloat(this.tEdu)||0)*12,
-        housingLoan: (parseFloat(this.tLoan)||0)*12, housingRent: (parseFloat(this.tRentDeduction)||0)*12,
-        elderlySupport: (parseFloat(this.tElder)||0)*12, infantCare: (parseFloat(this.tBaby)||0)*12
+        salary: s * 12, labor: (this.tLabor || 0) * 12,
+        author: (this.tAuthor || 0) * 12, royalty: (this.tRoyalty || 0) * 12,
+        business: this.tBusiness || 0, dividend: this.tDividend || 0,
+        rent: this.tRent || 0, rentDeduction: 0,
+        transfer: this.tTransfer || 0, transferCost: 0,
+        luck: this.tLuck || 0, social: ys,
+        childEducation: (this.tChild || 0) * 12, continuingEducation: (this.tEdu || 0) * 12,
+        housingLoan: (this.tLoan || 0) * 12, housingRent: (this.tRentDeduction || 0) * 12,
+        elderlySupport: (this.tElder || 0) * 12, infantCare: (this.tBaby || 0) * 12
       }, this.cfg)
       this.tr = {
         totalTax: fmt(tax.totalTax), monthlyTax: fmt(tax.monthlyTax),
@@ -322,13 +312,13 @@ export default {
     },
     save() {
       saveInput({
-        salary: this.salary, fundBase: this.fundBase, fundRate: this.fundRate,
-        flexBase: this.flexBase, flexPen: this.flexPen, flexMed: this.flexMed,
-        tSalary: this.tSalary, tLabor: this.tLabor, tAuthor: this.tAuthor, tRoyalty: this.tRoyalty,
-        tBusiness: this.tBusiness, tDividend: this.tDividend, tRent: this.tRent,
-        tTransfer: this.tTransfer, tLuck: this.tLuck,
-        tChild: this.tChild, tEdu: this.tEdu, tLoan: this.tLoan,
-        tRentDeduction: this.tRentDeduction, tElder: this.tElder, tBaby: this.tBaby
+        salary: String(this.salary), fundBase: String(this.fundBase), fundRate: String(this.fundRate),
+        flexBase: String(this.flexBase), flexPen: String(this.flexPen), flexMed: String(this.flexMed),
+        tSalary: String(this.tSalary), tLabor: String(this.tLabor), tAuthor: String(this.tAuthor), tRoyalty: String(this.tRoyalty),
+        tBusiness: String(this.tBusiness), tDividend: String(this.tDividend), tRent: String(this.tRent),
+        tTransfer: String(this.tTransfer), tLuck: String(this.tLuck),
+        tChild: String(this.tChild), tEdu: String(this.tEdu), tLoan: String(this.tLoan),
+        tRentDeduction: String(this.tRentDeduction), tElder: String(this.tElder), tBaby: String(this.tBaby)
       })
     }
   }
@@ -355,6 +345,8 @@ export default {
 .val{flex:1;font-size:28rpx;color:#2d8cf0;font-weight:bold}
 .sync{font-size:22rpx;color:#999;background:#f0f0f0;padding:4rpx 12rpx;border-radius:8rpx;margin-left:12rpx}
 .info{background:#fffbe6;border:2rpx solid #ffe58f;border-radius:8rpx;padding:16rpx;margin:16rpx 0;font-size:24rpx;color:#8c6e00}
+.calc-btn{background:#2d8cf0;height:88rpx;border-radius:12rpx;display:flex;align-items:center;justify-content:center;margin-top:20rpx}
+.calc-btn-t{color:#fff;font-size:32rpx;font-weight:bold}
 .big{display:flex;justify-content:space-around;padding:20rpx 0;border-bottom:2rpx solid #f0f0f0;margin-bottom:20rpx}
 .bi{text-align:center}
 .bl{display:block;font-size:24rpx;color:#999;margin-bottom:10rpx}
