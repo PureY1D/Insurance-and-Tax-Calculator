@@ -59,29 +59,29 @@
       <view class="card">
         <text class="title">综合所得（元/月）</text>
         <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="onTSalary"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="e=>tLabor=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="e=>tAuthor=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="e=>tRoyalty=e.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="onTLabor"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="onTAuthor"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="onTRoyalty"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">其他所得（元/年）</text>
-        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="e=>tBusiness=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="e=>tDividend=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="e=>tRent=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="e=>tTransfer=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="e=>tLuck=e.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="onTBusiness"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="onTDividend"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="onTRent"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="onTTransfer"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="onTLuck"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="title">扣除项目</text>
         <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{yearSocial}} 元</text><text class="sync">自动同步</text></view>
-        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="e=>tChild=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="e=>tEdu=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="e=>tLoan=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="e=>tRentDeduction=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="e=>tElder=e.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="e=>tBaby=e.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="onTChild"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="onTEdu"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="onTLoan"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="onTRentDeduction"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="onTElder"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="onTBaby"/><text class="ut">元</text></view>
       </view>
 
       <view v-if="taxResult" class="card">
@@ -160,6 +160,20 @@ export default {
     onFlexPen(e) { this.flexPen = e.detail.value; this.calcFlex() },
     onFlexMed(e) { this.flexMed = e.detail.value; this.calcFlex() },
     onTSalary(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.calcAll(); this.calcTax() },
+    onTLabor(e) { this.tLabor = e.detail.value; this.calcTax() },
+    onTAuthor(e) { this.tAuthor = e.detail.value; this.calcTax() },
+    onTRoyalty(e) { this.tRoyalty = e.detail.value; this.calcTax() },
+    onTBusiness(e) { this.tBusiness = e.detail.value; this.calcTax() },
+    onTDividend(e) { this.tDividend = e.detail.value; this.calcTax() },
+    onTRent(e) { this.tRent = e.detail.value; this.calcTax() },
+    onTTransfer(e) { this.tTransfer = e.detail.value; this.calcTax() },
+    onTLuck(e) { this.tLuck = e.detail.value; this.calcTax() },
+    onTChild(e) { this.tChild = e.detail.value; this.calcTax() },
+    onTEdu(e) { this.tEdu = e.detail.value; this.calcTax() },
+    onTLoan(e) { this.tLoan = e.detail.value; this.calcTax() },
+    onTRentDeduction(e) { this.tRentDeduction = e.detail.value; this.calcTax() },
+    onTElder(e) { this.tElder = e.detail.value; this.calcTax() },
+    onTBaby(e) { this.tBaby = e.detail.value; this.calcTax() },
     calcAll() {
       if (!this.cfg) return
       var s = parseFloat(this.salary) || 0
