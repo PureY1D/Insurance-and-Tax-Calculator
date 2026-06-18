@@ -109,7 +109,7 @@ export default {
   data() {
     return {
       tab: 0, sub: 0,
-      cfg: null,
+      cfg: loadConfig(),
       salary: '10000', fundBase: '', fundRate: '5',
       flexBase: '4986', flexPen: '20', flexMed: '8',
       tSalary: '10000', tLabor: '0', tAuthor: '0', tRoyalty: '0',
