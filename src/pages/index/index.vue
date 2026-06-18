@@ -5,14 +5,12 @@
       <view v-on:click="onTabChange(1)"><text v-if="tab===1" class="tab on">个人所得税</text><text v-else class="tab">个人所得税</text></view>
     </view>
 
-    <!-- 社保页 -->
     <view v-if="tab===0" class="body">
       <view class="subs">
         <view v-on:click="onSubChange(0)"><text v-if="sub===0" class="sub on">企业职工</text><text v-else class="sub">企业职工</text></view>
         <view v-on:click="onSubChange(1)"><text v-if="sub===1" class="sub on">灵活就业</text><text v-else class="sub">灵活就业</text></view>
       </view>
 
-      <!-- 企业职工 -->
       <view v-if="sub===0" class="card">
         <text class="title">企业职工五险一金</text>
         <view class="row"><text class="lbl">税前工资</text><input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/><text class="ut">元/月</text></view>
@@ -20,7 +18,7 @@
         <view class="row"><text class="lbl">公积金比例</text><input class="ipt" type="digit" :value="fundRate" @input="onFundRateInput"/><text class="ut">%</text></view>
       </view>
 
-      <view v-if="sub===0" class="card">
+      <view v-if="sub===0 && result" class="card">
         <text class="title">计算结果</text>
         <view class="big">
           <view class="bi"><text class="bl">到手工资</text><text class="bv">{{result.takeHome}}</text></view>
@@ -40,7 +38,6 @@
         </view>
       </view>
 
-      <!-- 灵活就业 -->
       <view v-if="sub===1" class="card">
         <text class="title">灵活就业社保</text>
         <view class="row"><text class="lbl">缴费基数</text><input class="ipt" type="digit" :value="flexBase" @input="onFlexBaseInput"/><text class="ut">元</text></view>
@@ -48,7 +45,7 @@
         <view class="row"><text class="lbl">医保比例</text><input class="ipt" type="digit" :value="flexMed" @input="onFlexMedInput"/><text class="ut">%</text></view>
       </view>
 
-      <view v-if="sub===1" class="card">
+      <view v-if="sub===1 && flexResult" class="card">
         <text class="title">计算结果</text>
         <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{flexResult.total}}</text></view></view>
         <view class="lst">
@@ -58,7 +55,6 @@
       </view>
     </view>
 
-    <!-- 个税页 -->
     <view v-if="tab===1" class="body">
       <view class="card">
         <text class="title">综合所得（元/月）</text>
@@ -79,7 +75,7 @@
 
       <view class="card">
         <text class="title">扣除项目</text>
-        <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{result.yearPt}} 元</text><text class="sync">自动同步</text></view>
+        <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{yearSocial}} 元</text><text class="sync">自动同步</text></view>
         <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="onInput('tChild',$event)"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="onInput('tEdu',$event)"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="onInput('tLoan',$event)"/><text class="ut">元</text></view>
@@ -88,7 +84,7 @@
         <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="onInput('tBaby',$event)"/><text class="ut">元</text></view>
       </view>
 
-      <view class="card">
+      <view v-if="taxResult" class="card">
         <text class="title">计算结果</text>
         <view class="big">
           <view class="bi"><text class="bl">年度总个税</text><text class="bv">{{taxResult.totalTax}}</text></view>
@@ -136,19 +132,32 @@ export default {
       tLoan: inp.tLoan || '0',
       tRentDeduction: inp.tRentDeduction || '0',
       tElder: inp.tElder || '0',
-      tBaby: inp.tBaby || '0'
+      tBaby: inp.tBaby || '0',
+      // 计算结果缓存
+      result: null,
+      flexResult: null,
+      taxResult: null,
+      yearSocial: '0'
     }
   },
-  computed: {
-    // 一次性计算所有社保结果
-    result() {
+  onLoad() {
+    this.cfg = loadConfig()
+    this.calcAll()
+  },
+  onShow() {
+    this.cfg = loadConfig()
+  },
+  methods: {
+    calcAll() {
+      // 计算社保
       var s = parseFloat(this.salary) || 0
       var fb = parseFloat(this.fundBase) || s
       var fr = parseFloat(this.fundRate) || 5
       var social = calcSocial(s, fb, fr, this.cfg)
+      this.yearSocial = fmt(social.yearPt)
 
       // 计算个税
-      var taxInput = {
+      var tax = calcTax({
         salary: s * 12,
         labor: (parseFloat(this.tLabor)||0) * 12,
         author: (parseFloat(this.tAuthor)||0) * 12,
@@ -167,61 +176,28 @@ export default {
         housingRent: (parseFloat(this.tRentDeduction)||0)*12,
         elderlySupport: (parseFloat(this.tElder)||0)*12,
         infantCare: (parseFloat(this.tBaby)||0)*12
-      }
-      var tax = calcTax(taxInput, this.cfg)
+      }, this.cfg)
+
       var takeHome = calcTakeHome(s, social.pt, tax.monthlyTax)
 
-      return {
+      this.result = {
         ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu),
         ei: fmt(social.ei), ef: fmt(social.ef),
         pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf),
-        pt: fmt(social.pt), yearPt: fmt(social.yearPt),
-        takeHome: fmt(takeHome),
-        monthlyTax: fmt(tax.monthlyTax)
+        pt: fmt(social.pt), takeHome: fmt(takeHome), monthlyTax: fmt(tax.monthlyTax)
+      }
+
+      this.taxResult = {
+        totalTax: fmt(tax.totalTax), monthlyTax: fmt(tax.monthlyTax),
+        taxableIncome: fmt(tax.comprehensiveTaxable),
+        comprehensiveTax: fmt(tax.comprehensiveTax),
+        businessTax: fmt(tax.businessTax), proportionalTax: fmt(tax.proportionalTax)
       }
     },
-
-    // 灵活就业结果
-    flexResult() {
+    calcFlexResult() {
       var res = calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
-      return { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
+      this.flexResult = { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
     },
-
-    // 个税结果
-    taxResult() {
-      var social = calcSocial(parseFloat(this.salary)||0, parseFloat(this.fundBase)||parseFloat(this.salary)||0, parseFloat(this.fundRate)||5, this.cfg)
-      var taxInput = {
-        salary: (parseFloat(this.tSalary)||0) * 12,
-        labor: (parseFloat(this.tLabor)||0) * 12,
-        author: (parseFloat(this.tAuthor)||0) * 12,
-        royalty: (parseFloat(this.tRoyalty)||0) * 12,
-        business: parseFloat(this.tBusiness)||0,
-        dividend: parseFloat(this.tDividend)||0,
-        rent: parseFloat(this.tRent)||0,
-        rentDeduction: 0,
-        transfer: parseFloat(this.tTransfer)||0,
-        transferCost: 0,
-        luck: parseFloat(this.tLuck)||0,
-        social: social.yearPt,
-        childEducation: (parseFloat(this.tChild)||0)*12,
-        continuingEducation: (parseFloat(this.tEdu)||0)*12,
-        housingLoan: (parseFloat(this.tLoan)||0)*12,
-        housingRent: (parseFloat(this.tRentDeduction)||0)*12,
-        elderlySupport: (parseFloat(this.tElder)||0)*12,
-        infantCare: (parseFloat(this.tBaby)||0)*12
-      }
-      var res = calcTax(taxInput, this.cfg)
-      return {
-        totalTax: fmt(res.totalTax), monthlyTax: fmt(res.monthlyTax),
-        taxableIncome: fmt(res.comprehensiveTaxable),
-        comprehensiveTax: fmt(res.comprehensiveTax),
-        businessTax: fmt(res.businessTax), proportionalTax: fmt(res.proportionalTax)
-      }
-    }
-  },
-  onLoad() { this.cfg = loadConfig() },
-  onShow() { this.cfg = loadConfig() },
-  methods: {
     save() {
       saveInput({
         _tab: this.tab, _sub: this.sub,
@@ -235,15 +211,15 @@ export default {
       })
     },
     onTabChange(v) { this.tab = v; this.save() },
-    onSubChange(v) { this.sub = v; this.save() },
-    onSalaryInput(e) { this.salary = e.detail.value; this.tSalary = e.detail.value; this.save() },
-    onFundBaseInput(e) { this.fundBase = e.detail.value; this.save() },
-    onFundRateInput(e) { this.fundRate = e.detail.value; this.save() },
-    onFlexBaseInput(e) { this.flexBase = e.detail.value; this.save() },
-    onFlexPenInput(e) { this.flexPen = e.detail.value; this.save() },
-    onFlexMedInput(e) { this.flexMed = e.detail.value; this.save() },
-    onTSalaryInput(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.save() },
-    onInput(key, e) { this[key] = e.detail.value; this.save() }
+    onSubChange(v) { this.sub = v; this.save(); if(v===1) this.calcFlexResult() },
+    onSalaryInput(e) { this.salary = e.detail.value; this.tSalary = e.detail.value; this.save(); this.calcAll() },
+    onFundBaseInput(e) { this.fundBase = e.detail.value; this.save(); this.calcAll() },
+    onFundRateInput(e) { this.fundRate = e.detail.value; this.save(); this.calcAll() },
+    onFlexBaseInput(e) { this.flexBase = e.detail.value; this.save(); this.calcFlexResult() },
+    onFlexPenInput(e) { this.flexPen = e.detail.value; this.save(); this.calcFlexResult() },
+    onFlexMedInput(e) { this.flexMed = e.detail.value; this.save(); this.calcFlexResult() },
+    onTSalaryInput(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.save(); this.calcAll() },
+    onInput(key, e) { this[key] = e.detail.value; this.save(); this.calcAll() }
   }
 }
 </script>
