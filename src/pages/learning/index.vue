@@ -137,7 +137,6 @@
           <text class="dh">【扣除项目】</text>
           <text class="dc">基本减除: 60,000 元</text>
           <text class="dc">个人社保: {{yearSocial}} 元（自动同步）</text>
-          <text class="dc">专项附加: {{fmt(specialTotal)}} 元</text>
           <text class="dhl">扣除合计: {{tr.comprehensiveDeduction}} 元</text>
         </view>
 
@@ -179,41 +178,42 @@ import { calcSocial, calcFlex, calcTax, calcTakeHome, fmt } from '../../utils/ca
 
 export default {
   data() {
-    var inp = loadInput()
     return {
-      tab: inp._ltab || 0,
-      sub: inp._lsub || 0,
-      cfg: loadConfig(),
-      salary: inp.salary || '10000',
-      fundBase: inp.fundBase || '',
-      fundRate: inp.fundRate || '5',
-      flexBase: inp.flexBase || '4986',
-      flexPen: inp.flexPen || '20',
-      flexMed: inp.flexMed || '8',
-      tSalary: inp.tSalary || '10000',
-      tLabor: inp.tLabor || '0',
-      tAuthor: inp.tAuthor || '0',
-      tRoyalty: inp.tRoyalty || '0',
-      tBusiness: inp.tBusiness || '0',
-      tDividend: inp.tDividend || '0',
-      tRent: inp.tRent || '0',
-      tTransfer: inp.tTransfer || '0',
-      tLuck: inp.tLuck || '0',
-      tChild: inp.tChild || '0',
-      tEdu: inp.tEdu || '0',
-      tLoan: inp.tLoan || '0',
-      tRentDeduction: inp.tRentDeduction || '0',
-      tElder: inp.tElder || '0',
-      tBaby: inp.tBaby || '0',
-      r: null,
-      fr: null,
-      tr: null,
-      yearSocial: '0',
-      specialTotal: 0
+      tab: 0, sub: 0,
+      cfg: null,
+      salary: '10000', fundBase: '', fundRate: '5',
+      flexBase: '4986', flexPen: '20', flexMed: '8',
+      tSalary: '10000', tLabor: '0', tAuthor: '0', tRoyalty: '0',
+      tBusiness: '0', tDividend: '0', tRent: '0', tTransfer: '0', tLuck: '0',
+      yearSocial: '0', tChild: '0', tEdu: '0', tLoan: '0',
+      tRentDeduction: '0', tElder: '0', tBaby: '0',
+      r: null, fr: null, tr: null
     }
   },
   onLoad() {
     this.cfg = loadConfig()
+    var inp = loadInput()
+    this.salary = inp.salary || '10000'
+    this.tSalary = inp.tSalary || '10000'
+    this.fundRate = inp.fundRate || '5'
+    this.fundBase = inp.fundBase || ''
+    this.flexBase = inp.flexBase || '4986'
+    this.flexPen = inp.flexPen || '20'
+    this.flexMed = inp.flexMed || '8'
+    this.tLabor = inp.tLabor || '0'
+    this.tAuthor = inp.tAuthor || '0'
+    this.tRoyalty = inp.tRoyalty || '0'
+    this.tBusiness = inp.tBusiness || '0'
+    this.tDividend = inp.tDividend || '0'
+    this.tRent = inp.tRent || '0'
+    this.tTransfer = inp.tTransfer || '0'
+    this.tLuck = inp.tLuck || '0'
+    this.tChild = inp.tChild || '0'
+    this.tEdu = inp.tEdu || '0'
+    this.tLoan = inp.tLoan || '0'
+    this.tRentDeduction = inp.tRentDeduction || '0'
+    this.tElder = inp.tElder || '0'
+    this.tBaby = inp.tBaby || '0'
     this.calcAll()
     this.calcFlexResult()
   },
@@ -250,17 +250,12 @@ export default {
         infantCare: (parseFloat(this.tBaby)||0)*12
       }, this.cfg)
 
-      var takeHome = calcTakeHome(s, social.pt, tax.monthlyTax)
-
-      this.specialTotal = ((parseFloat(this.tChild)||0)+(parseFloat(this.tEdu)||0)+
-        (parseFloat(this.tLoan)||0)+(parseFloat(this.tRentDeduction)||0)+
-        (parseFloat(this.tElder)||0)+(parseFloat(this.tBaby)||0))*12
-
       this.r = {
         base: fmt(social.base), fb: fmt(social.fundBase),
         ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu), ei: fmt(social.ei), ef: fmt(social.ef), et: fmt(social.et),
         pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf), pt: fmt(social.pt),
-        yearPt: fmt(social.yearPt), takeHome: fmt(takeHome), monthlyTax: fmt(tax.monthlyTax)
+        yearPt: fmt(social.yearPt), takeHome: fmt(calcTakeHome(s, social.pt, tax.monthlyTax)),
+        monthlyTax: fmt(tax.monthlyTax)
       }
 
       this.tr = {
@@ -272,14 +267,25 @@ export default {
         comprehensiveBracket: tax.comprehensiveBracket,
         businessTax: fmt(tax.businessTax), proportionalTax: fmt(tax.proportionalTax)
       }
+
+      this.save()
     },
     calcFlexResult() {
       var res = calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
       this.fr = { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
     },
+    onTabChange(v) { this.tab = v; this.save() },
+    onSubChange(v) { this.sub = v; if(v===1) this.calcFlexResult(); this.save() },
+    onSalaryInput(e) { this.salary = e.detail.value; this.tSalary = e.detail.value; this.calcAll() },
+    onFundBaseInput(e) { this.fundBase = e.detail.value; this.calcAll() },
+    onFundRateInput(e) { this.fundRate = e.detail.value; this.calcAll() },
+    onFlexBaseInput(e) { this.flexBase = e.detail.value; this.calcFlexResult(); this.save() },
+    onFlexPenInput(e) { this.flexPen = e.detail.value; this.calcFlexResult(); this.save() },
+    onFlexMedInput(e) { this.flexMed = e.detail.value; this.calcFlexResult(); this.save() },
+    onTSalaryInput(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.calcAll() },
+    onInput(key, e) { this[key] = e.detail.value; this.save(); if(this.tab===1) this.calcAll() },
     save() {
       saveInput({
-        _ltab: this.tab, _lsub: this.sub,
         salary: this.salary, fundBase: this.fundBase, fundRate: this.fundRate,
         flexBase: this.flexBase, flexPen: this.flexPen, flexMed: this.flexMed,
         tSalary: this.tSalary, tLabor: this.tLabor, tAuthor: this.tAuthor, tRoyalty: this.tRoyalty,
@@ -288,17 +294,7 @@ export default {
         tChild: this.tChild, tEdu: this.tEdu, tLoan: this.tLoan,
         tRentDeduction: this.tRentDeduction, tElder: this.tElder, tBaby: this.tBaby
       })
-    },
-    onTabChange(v) { this.tab = v; this.save() },
-    onSubChange(v) { this.sub = v; this.save(); if(v===1) this.calcFlexResult() },
-    onSalaryInput(e) { this.salary = e.detail.value; this.tSalary = e.detail.value; this.save(); this.calcAll() },
-    onFundBaseInput(e) { this.fundBase = e.detail.value; this.save(); this.calcAll() },
-    onFundRateInput(e) { this.fundRate = e.detail.value; this.save(); this.calcAll() },
-    onFlexBaseInput(e) { this.flexBase = e.detail.value; this.save(); this.calcFlexResult() },
-    onFlexPenInput(e) { this.flexPen = e.detail.value; this.save(); this.calcFlexResult() },
-    onFlexMedInput(e) { this.flexMed = e.detail.value; this.save(); this.calcFlexResult() },
-    onTSalaryInput(e) { this.tSalary = e.detail.value; this.salary = e.detail.value; this.save(); this.calcAll() },
-    onInput(key, e) { this[key] = e.detail.value; this.save(); this.calcAll() }
+    }
   }
 }
 </script>
