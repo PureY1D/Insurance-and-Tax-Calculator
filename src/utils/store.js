@@ -56,6 +56,7 @@ var DEFAULT_CONFIG = {
 // 默认输入数据
 var DEFAULT_INPUT = {
   // 社保页输入
+  hasSocial: 'false',  // 是否缴纳五险一金
   salary: '10000',
   fundBase: '',      // 空表示等于工资
   fundRate: '5',

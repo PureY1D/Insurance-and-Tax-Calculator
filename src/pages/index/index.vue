@@ -20,15 +20,25 @@
           <input class="ipt" type="digit" v-model.number="salary"/>
           <text class="ut">元/月</text>
         </view>
-        <view class="row">
-          <text class="lbl">公积金基数</text>
-          <input class="ipt" type="digit" v-model.number="fundBase" placeholder="默认等于工资"/>
-          <text class="ut">元</text>
+
+        <view class="check-row" @click="hasSocial = !hasSocial">
+          <view class="checkbox">
+            <text v-if="hasSocial" class="checked">✓</text>
+          </view>
+          <text class="check-label">缴纳五险一金</text>
         </view>
-        <view class="row">
-          <text class="lbl">公积金比例</text>
-          <input class="ipt" type="digit" v-model.number="fundRate"/>
-          <text class="ut">%</text>
+
+        <view v-if="hasSocial">
+          <view class="row">
+            <text class="lbl">公积金基数</text>
+            <input class="ipt" type="digit" v-model.number="fundBase" placeholder="默认等于工资"/>
+            <text class="ut">元</text>
+          </view>
+          <view class="row">
+            <text class="lbl">公积金比例</text>
+            <input class="ipt" type="digit" v-model.number="fundRate"/>
+            <text class="ut">%</text>
+          </view>
         </view>
       </view>
 
@@ -39,7 +49,7 @@
           <view class="bi"><text class="bl">到手工资</text><text class="bv">{{result.takeHome}}</text></view>
           <view class="bi"><text class="bl">个人社保</text><text class="bv">{{result.pt}}</text></view>
         </view>
-        <view class="lst">
+        <view v-if="hasSocial" class="lst">
           <view class="li"><text>单位养老</text><text>{{result.ep}}</text></view>
           <view class="li"><text>单位医疗</text><text>{{result.em}}</text></view>
           <view class="li"><text>单位失业</text><text>{{result.eu}}</text></view>
@@ -74,8 +84,8 @@
       </view>
 
       <!-- 灵活就业结果 -->
-      <view v-if="showFlexResult" class="card">
-        <text class="title">计算结果</text>
+      <view v-if="showFlexResult && sub===1" class="card">
+        <text class="title">灵活就业缴费结果</text>
         <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{flexResult.total}}</text></view></view>
         <view class="lst">
           <view class="li"><text>养老保险</text><text>{{flexResult.p}}</text></view>
@@ -140,6 +150,7 @@ export default {
   data() {
     return {
       tab: 0, sub: 0, cfg: null,
+      hasSocial: false,
       salary: 10000, fundBase: null, fundRate: 5,
       flexBase: 4986, flexPen: 20, flexMed: 8,
       tSalary: 10000, tLabor: 0, tAuthor: 0, tRoyalty: 0,
@@ -149,13 +160,11 @@ export default {
       showResult: false, showFlexResult: false, showTaxResult: false,
       result: { takeHome: '0', pt: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', pp: '0', pm: '0', pu: '0', pf: '0', monthlyTax: '0' },
       flexResult: { total: '0', p: '0', m: '0' },
-      taxResult: { totalTax: '0', monthlyTax: '0', taxableIncome: '0', comprehensiveTax: '0', businessTax: '0', proportionalTax: '0' },
-      hasCalcSocial: false,
-      hasCalcFlex: false,
-      hasCalcTax: false
+      taxResult: { totalTax: '0', monthlyTax: '0', taxableIncome: '0', comprehensiveTax: '0', businessTax: '0', proportionalTax: '0' }
     }
   },
   watch: {
+    hasSocial() { this.doCalc() },
     salary() { this.doCalc() },
     fundBase() { this.doCalc() },
     fundRate() { this.doCalc() },
@@ -182,19 +191,20 @@ export default {
     this.cfg = loadConfig()
     this.loadInputData()
     this.doCalc()
+    this.doCalcFlex()
     this.doCalcTax()
   },
   onShow() {
     this.cfg = loadConfig()
     this.loadInputData()
-    // 恢复计算结果
-    if (this.hasCalcSocial) this.doCalc()
-    if (this.hasCalcFlex) this.doCalcFlex()
-    if (this.hasCalcTax) this.doCalcTax()
+    this.doCalc()
+    this.doCalcFlex()
+    this.doCalcTax()
   },
   methods: {
     loadInputData() {
       var inp = loadInput()
+      this.hasSocial = inp.hasSocial === 'true'
       this.salary = parseFloat(inp.salary) || 10000
       this.tSalary = parseFloat(inp.tSalary) || 10000
       this.fundRate = parseFloat(inp.fundRate) || 5
@@ -219,40 +229,40 @@ export default {
     },
     switchSub(index) {
       this.sub = index
-      // 切换时恢复对应结果
-      if (index === 0 && this.hasCalcSocial) {
-        this.showResult = true
-        this.showFlexResult = false
-      } else if (index === 1 && this.hasCalcFlex) {
-        this.showResult = false
-        this.showFlexResult = true
-      }
     },
     doCalc() {
       if (!this.cfg) return
       var s = this.salary || 0
-      // 修复：正确处理 fundBase 为 0 或 null 的情况
-      var fb = (this.fundBase !== null && this.fundBase !== undefined && this.fundBase !== '')
-                ? this.fundBase : s
-      var fr = this.fundRate || 5
-      var social = calcSocial(s, fb, fr, this.cfg)
-      this.yearSocial = fmt(social.yearPt)
-      var tax = calcTax({
-        salary: s * 12, labor: 0, author: 0, royalty: 0,
-        business: 0, dividend: 0, rent: 0, rentDeduction: 0,
-        transfer: 0, transferCost: 0, luck: 0, social: social.yearPt,
-        childEducation: 0, continuingEducation: 0, housingLoan: 0,
-        housingRent: 0, elderlySupport: 0, infantCare: 0
-      }, this.cfg)
-      this.result = {
-        ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu),
-        ei: fmt(social.ei), ef: fmt(social.ef),
-        pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf),
-        pt: fmt(social.pt), takeHome: fmt(calcTakeHome(s, social.pt, tax.monthlyTax)),
-        monthlyTax: fmt(tax.monthlyTax)
+
+      if (this.hasSocial) {
+        var fb = (this.fundBase !== null && this.fundBase !== undefined && this.fundBase !== '')
+                  ? this.fundBase : s
+        var fr = this.fundRate || 5
+        var social = calcSocial(s, fb, fr, this.cfg)
+        this.yearSocial = fmt(social.yearPt)
+        var tax = calcTax({
+          salary: s * 12, labor: 0, author: 0, royalty: 0,
+          business: 0, dividend: 0, rent: 0, rentDeduction: 0,
+          transfer: 0, transferCost: 0, luck: 0, social: social.yearPt,
+          childEducation: 0, continuingEducation: 0, housingLoan: 0,
+          housingRent: 0, elderlySupport: 0, infantCare: 0
+        }, this.cfg)
+        this.result = {
+          ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu),
+          ei: fmt(social.ei), ef: fmt(social.ef),
+          pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf),
+          pt: fmt(social.pt), takeHome: fmt(calcTakeHome(s, social.pt, tax.monthlyTax)),
+          monthlyTax: fmt(tax.monthlyTax)
+        }
+      } else {
+        this.yearSocial = '0'
+        this.result = {
+          ep: '0.00', em: '0.00', eu: '0.00', ei: '0.00', ef: '0.00',
+          pp: '0.00', pm: '0.00', pu: '0.00', pf: '0.00',
+          pt: '0.00', takeHome: fmt(s), monthlyTax: '0.00'
+        }
       }
       this.showResult = true
-      this.hasCalcSocial = true
       this.save()
     },
     doCalcFlex() {
@@ -260,7 +270,6 @@ export default {
       var res = calcFlex(this.flexBase || 0, this.flexPen || 20, this.flexMed || 8, this.cfg)
       this.flexResult = { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
       this.showFlexResult = true
-      this.hasCalcFlex = true
     },
     doCalcTax() {
       if (!this.cfg) return
@@ -284,10 +293,10 @@ export default {
         businessTax: fmt(tax.businessTax), proportionalTax: fmt(tax.proportionalTax)
       }
       this.showTaxResult = true
-      this.hasCalcTax = true
     },
     save() {
       saveInput({
+        hasSocial: String(this.hasSocial),
         salary: String(this.salary),
         fundBase: this.fundBase !== null ? String(this.fundBase) : '',
         fundRate: String(this.fundRate),
@@ -322,6 +331,10 @@ export default {
 .ut{font-size:24rpx;color:#999;margin-left:12rpx}
 .val{flex:1;font-size:28rpx;color:#2d8cf0;font-weight:bold}
 .sync{font-size:22rpx;color:#999;background:#f0f0f0;padding:4rpx 12rpx;border-radius:8rpx;margin-left:12rpx}
+.check-row{display:flex;align-items:center;margin-bottom:20rpx;cursor:pointer}
+.checkbox{width:40rpx;height:40rpx;border:2rpx solid #ddd;border-radius:8rpx;display:flex;align-items:center;justify-content:center;margin-right:12rpx;background:#fff}
+.checked{color:#2d8cf0;font-weight:bold}
+.check-label{font-size:28rpx;color:#666}
 .big{display:flex;justify-content:space-around;padding:20rpx 0;border-bottom:2rpx solid #f0f0f0;margin-bottom:20rpx}
 .bi{text-align:center}
 .bl{display:block;font-size:24rpx;color:#999;margin-bottom:10rpx}
