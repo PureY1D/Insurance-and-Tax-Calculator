@@ -8,8 +8,8 @@
     <!-- 社保页 -->
     <view v-show="tab===0" class="body">
       <view class="subs">
-        <view @click="sub=0; showFlexResult=false"><text :class="sub===0?'sub on':'sub'">企业职工</text></view>
-        <view @click="sub=1; showResult=false"><text :class="sub===1?'sub on':'sub'">灵活就业</text></view>
+        <view @click="switchSub(0)"><text :class="sub===0?'sub on':'sub'">企业职工</text></view>
+        <view @click="switchSub(1)"><text :class="sub===1?'sub on':'sub'">灵活就业</text></view>
       </view>
 
       <!-- 企业职工 -->
@@ -149,19 +149,19 @@ export default {
       showResult: false, showFlexResult: false, showTaxResult: false,
       result: { takeHome: '0', pt: '0', ep: '0', em: '0', eu: '0', ei: '0', ef: '0', pp: '0', pm: '0', pu: '0', pf: '0', monthlyTax: '0' },
       flexResult: { total: '0', p: '0', m: '0' },
-      taxResult: { totalTax: '0', monthlyTax: '0', taxableIncome: '0', comprehensiveTax: '0', businessTax: '0', proportionalTax: '0' }
+      taxResult: { totalTax: '0', monthlyTax: '0', taxableIncome: '0', comprehensiveTax: '0', businessTax: '0', proportionalTax: '0' },
+      hasCalcSocial: false,
+      hasCalcFlex: false,
+      hasCalcTax: false
     }
   },
   watch: {
-    // 社保相关
     salary() { this.doCalc() },
     fundBase() { this.doCalc() },
     fundRate() { this.doCalc() },
-    // 灵活就业相关
     flexBase() { this.doCalcFlex() },
     flexPen() { this.doCalcFlex() },
     flexMed() { this.doCalcFlex() },
-    // 个税相关
     tSalary() { this.doCalcTax() },
     tLabor() { this.doCalcTax() },
     tAuthor() { this.doCalcTax() },
@@ -180,37 +180,60 @@ export default {
   },
   onLoad() {
     this.cfg = loadConfig()
-    var inp = loadInput()
-    this.salary = parseFloat(inp.salary) || 10000
-    this.tSalary = parseFloat(inp.tSalary) || 10000
-    this.fundRate = parseFloat(inp.fundRate) || 5
-    this.fundBase = parseFloat(inp.fundBase) || null
-    this.flexBase = parseFloat(inp.flexBase) || 4986
-    this.flexPen = parseFloat(inp.flexPen) || 20
-    this.flexMed = parseFloat(inp.flexMed) || 8
-    this.tLabor = parseFloat(inp.tLabor) || 0
-    this.tAuthor = parseFloat(inp.tAuthor) || 0
-    this.tRoyalty = parseFloat(inp.tRoyalty) || 0
-    this.tBusiness = parseFloat(inp.tBusiness) || 0
-    this.tDividend = parseFloat(inp.tDividend) || 0
-    this.tRent = parseFloat(inp.tRent) || 0
-    this.tTransfer = parseFloat(inp.tTransfer) || 0
-    this.tLuck = parseFloat(inp.tLuck) || 0
-    this.tChild = parseFloat(inp.tChild) || 0
-    this.tEdu = parseFloat(inp.tEdu) || 0
-    this.tLoan = parseFloat(inp.tLoan) || 0
-    this.tRentDeduction = parseFloat(inp.tRentDeduction) || 0
-    this.tElder = parseFloat(inp.tElder) || 0
-    this.tBaby = parseFloat(inp.tBaby) || 0
-    // 初始计算
+    this.loadInputData()
     this.doCalc()
     this.doCalcTax()
   },
+  onShow() {
+    this.cfg = loadConfig()
+    this.loadInputData()
+    // 恢复计算结果
+    if (this.hasCalcSocial) this.doCalc()
+    if (this.hasCalcFlex) this.doCalcFlex()
+    if (this.hasCalcTax) this.doCalcTax()
+  },
   methods: {
+    loadInputData() {
+      var inp = loadInput()
+      this.salary = parseFloat(inp.salary) || 10000
+      this.tSalary = parseFloat(inp.tSalary) || 10000
+      this.fundRate = parseFloat(inp.fundRate) || 5
+      this.fundBase = inp.fundBase ? parseFloat(inp.fundBase) : null
+      this.flexBase = parseFloat(inp.flexBase) || 4986
+      this.flexPen = parseFloat(inp.flexPen) || 20
+      this.flexMed = parseFloat(inp.flexMed) || 8
+      this.tLabor = parseFloat(inp.tLabor) || 0
+      this.tAuthor = parseFloat(inp.tAuthor) || 0
+      this.tRoyalty = parseFloat(inp.tRoyalty) || 0
+      this.tBusiness = parseFloat(inp.tBusiness) || 0
+      this.tDividend = parseFloat(inp.tDividend) || 0
+      this.tRent = parseFloat(inp.tRent) || 0
+      this.tTransfer = parseFloat(inp.tTransfer) || 0
+      this.tLuck = parseFloat(inp.tLuck) || 0
+      this.tChild = parseFloat(inp.tChild) || 0
+      this.tEdu = parseFloat(inp.tEdu) || 0
+      this.tLoan = parseFloat(inp.tLoan) || 0
+      this.tRentDeduction = parseFloat(inp.tRentDeduction) || 0
+      this.tElder = parseFloat(inp.tElder) || 0
+      this.tBaby = parseFloat(inp.tBaby) || 0
+    },
+    switchSub(index) {
+      this.sub = index
+      // 切换时恢复对应结果
+      if (index === 0 && this.hasCalcSocial) {
+        this.showResult = true
+        this.showFlexResult = false
+      } else if (index === 1 && this.hasCalcFlex) {
+        this.showResult = false
+        this.showFlexResult = true
+      }
+    },
     doCalc() {
       if (!this.cfg) return
       var s = this.salary || 0
-      var fb = this.fundBase || s
+      // 修复：正确处理 fundBase 为 0 或 null 的情况
+      var fb = (this.fundBase !== null && this.fundBase !== undefined && this.fundBase !== '')
+                ? this.fundBase : s
       var fr = this.fundRate || 5
       var social = calcSocial(s, fb, fr, this.cfg)
       this.yearSocial = fmt(social.yearPt)
@@ -229,6 +252,7 @@ export default {
         monthlyTax: fmt(tax.monthlyTax)
       }
       this.showResult = true
+      this.hasCalcSocial = true
       this.save()
     },
     doCalcFlex() {
@@ -236,6 +260,7 @@ export default {
       var res = calcFlex(this.flexBase || 0, this.flexPen || 20, this.flexMed || 8, this.cfg)
       this.flexResult = { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
       this.showFlexResult = true
+      this.hasCalcFlex = true
     },
     doCalcTax() {
       if (!this.cfg) return
@@ -259,10 +284,13 @@ export default {
         businessTax: fmt(tax.businessTax), proportionalTax: fmt(tax.proportionalTax)
       }
       this.showTaxResult = true
+      this.hasCalcTax = true
     },
     save() {
       saveInput({
-        salary: String(this.salary), fundBase: String(this.fundBase || ''), fundRate: String(this.fundRate),
+        salary: String(this.salary),
+        fundBase: this.fundBase !== null ? String(this.fundBase) : '',
+        fundRate: String(this.fundRate),
         flexBase: String(this.flexBase), flexPen: String(this.flexPen), flexMed: String(this.flexMed),
         tSalary: String(this.tSalary), tLabor: String(this.tLabor), tAuthor: String(this.tAuthor), tRoyalty: String(this.tRoyalty),
         tBusiness: String(this.tBusiness), tDividend: String(this.tDividend), tRent: String(this.tRent),
