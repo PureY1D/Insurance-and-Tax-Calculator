@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover"/>
+    <title>社保和个人所得税计算器（修正版）</title>
+    <style>
+        /* 核心样式重置 - 恢复原有设计风格 */
+        * { margin:0; padding:0; box-sizing:border-box; transition: all 0.2s ease; }
+        :root {
+            --bg: #f5f7fa; 
+            --card: #ffffff; 
+            --main: #2d8cf0; 
+            --main-light: #e8f3ff;
+            --text: #222; 
+            --text-light: #555; 
+            --border: #ddd;
+            --shadow: 0 8px 30px rgba(0,0,0,0.06); 
+            --success: #19be6b; 
+            --warn: #f56c6c;
+        }
+        /* 主题色保留 */
+        .theme-red { --bg:#fff5f5; --main:#e53935; --main-light:#ffebee; }
+        .theme-yellow { --bg:#fffbf0; --main:#ff9800; --main-light:#fff4e0; }
+        .theme-green { --bg:#f0fff4; --main:#43a047; --main-light:#e8f5e9; }
+        .theme-blue { --main:#2d8cf0; --main-light:#e8f3ff; }
+        .theme-purple { --bg:#f8f0ff; --main:#8e24aa; --main-light:#f3e5f5; }
+
+        body {
+            background: var(--bg); 
+            font-family: "Microsoft YaHei", system-ui, sans-serif;
+            line-height: 1.6; 
+            display: flex; 
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        /* 字体样式还原 */
+        .font-yahei { font-family: "Microsoft YaHei", sans-serif; }
+        .font-song { font-family: "FangSong", "仿宋", serif; }
+        .font-kai { font-family: "KaiTi", "楷体", serif; }
+        .font-xingcao { font-family: "Ma Shan Zheng", "KaiTi", cursive; }
+
+        /* 布局容器还原 */
+        .container { 
+            display:flex; 
+            width:100%; 
+            max-width:1400px; 
+            margin:0 auto; 
+            gap:20px; 
+            padding:20px;
+        }
+        /* 侧边面板样式还原 */
+        .side-panel {
+            width:340px; 
+            background:var(--card); 
+            border-radius:20px;
+            box-shadow:var(--shadow); 
+            position:sticky; 
+            top:20px;
+            height:calc(100vh - 40px); 
+            display:flex; 
+            flex-direction:column; 
+            overflow:hidden;
+        }
+        .side-tabs { display:flex; height:48px; border-bottom:1px solid var(--border); }
+        .side-tab {
+            flex:1; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center;
+            font-weight:bold; 
+            cursor:pointer; 
+            background:#f9fafb; 
+            color:#666; 
+            user-select:none;
+        }
+        .side-tab.active { background:var(--main); color:#fff; }
+        .side-body { flex:1; padding:16px; display:flex; flex-direction:column; }
+        .side-page { width:100%; height:100%; display:none; }
+        .side-page.show { display:flex; flex-direction:column; }
+
+        /* 备忘录样式 */
+        #memoInput {
+            width:100%; 
+            flex:1; 
+            border:1px solid var(--border); 
+            border-radius:12px;
+            padding:14px; 
+            font-size:14px; 
+            resize:none; 
+            outline:none; 
+            background:#fefefe;
+        }
+        #memoInput:focus { border-color:var(--main); box-shadow:0 0 0 3px rgba(45,140,240,0.12); }
+
+        /* 计算器样式 */
+        #calcInput {
+            width:100%; 
+            height:50px; 
+            text-align:right; 
+            font-size:22px; 
+            padding:10px 14px;
+            margin-bottom:14px; 
+            border:1px solid var(--border); 
+            border-radius:12px;
+            background:#fff; 
+            outline:none;
+        }
+        .calc-buttons { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+        .calc-btn {
+            padding:14px 0; 
+            border:1px solid var(--border); 
+            border-radius:12px;
+            background:#fff; 
+            cursor:pointer; 
+            font-size:18px; 
+            font-weight:50;
+            color:var(--text); 
+            user-select:none; 
+            text-align:center;
+            box-shadow:0 2px 6px rgba(0,0,0,0.04);
+        }
+        .calc-btn:active { background:var(--main-light); transform:scale(0.96); }
+        .calc-btn.eq { background:var(--main); color:#fff; border-color:var(--main); font-weight:bold; }
+
+        /* 主内容区样式 */
+        .main-content { flex:1; display:flex; flex-direction:column; gap:20px; min-width:0; }
+        .header-title {
+            text-align:center; 
+            cursor:pointer; 
+            padding:20px; 
+            background:var(--card);
+            border-radius:20px; 
+            box-shadow:var(--shadow);
+        }
+        .header-title h1 { font-size:28px; color:var(--main); margin-bottom:4px; }
+        .header-title p { font-size:14px; color:var(--text-light); }
+
+        /* 悬浮设置面板 - 固定左下角 */
+        .float-panel {
+            position:fixed; 
+            z-index:9999; 
+            display:flex; 
+            flex-direction:column;
+            align-items:flex-start; 
+            cursor:grab; 
+            user-select:none;
+            left:20px; 
+            bottom:20px; 
+            right:auto; 
+            top:auto;
+        }
+        .float-panel:active { cursor:grabbing; }
+        .float-btn {
+            width:48px; 
+            height:48px; 
+            background:var(--card); 
+            border-radius:50%;
+            display:flex; 
+            align-items:center; 
+            justify-content:center;
+            font-size:24px; 
+            color:var(--main); 
+            box-shadow:0 4px 16px rgba(0,0,0,0.1);
+            cursor:pointer;
+        }
+        .float-body {
+            margin-top:12px; 
+            width:230px; 
+            background:var(--card); 
+            border-radius:16px;
+            padding:20px; 
+            box-shadow:0 10px 30px rgba(0,0,0,0.1);
+            opacity:0; 
+            visibility:hidden; 
+            transform:translateY(-10px);
+            pointer-events:none;
+        }
+        .float-body.show { opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto; }
+
+        /* 标签页样式 */
+        .tab-container { display:flex; gap:10px; }
+        .tab {
+            flex:1; 
+            padding:14px; 
+            text-align:center; 
+            background:var(--main-light);
+            border-radius:12px; 
+            cursor:pointer; 
+            font-weight:bold; 
+            color:var(--text-light);
+        }
+        .tab.active { background:var(--main); color:#fff; }
+
+        .page { display:none; }
+        .page.show { display:block; }
+
+        /* 子标签页 */
+        .sub-tab-bar { display:flex; gap:10px; margin-bottom:20px; }
+        .sub-tab-btn {
+            flex:1; 
+            padding:12px; 
+            text-align:center; 
+            border-radius:10px;
+            border:1px solid var(--border); 
+            background:#f0f2f5; 
+            color:#555;
+            font-weight:bold; 
+            cursor:pointer;
+        }
+        .sub-tab-btn.active { background:var(--main-light); color:var(--main); border-color:var(--main); }
+
+        /* 卡片样式还原 */
+        .card {
+            background:var(--card); 
+            border-radius:20px; 
+            padding:24px;
+            box-shadow:var(--shadow); 
+            margin-bottom:16px;
+        }
+        .title {
+            font-size:24px; 
+            color:var(--main); 
+            margin-bottom:24px;
+            font-weight:bold; 
+            text-align:center;
+        }
+        .section { margin-bottom:24px; }
+        .section h4 {
+            font-size:17px; 
+            color:var(--text); 
+            margin-bottom:14px;
+            padding-left:12px; 
+            border-left:5px solid var(--main);
+        }
+        /* 表单样式 */
+        .form-row { display:flex; flex-wrap:wrap; gap:14px; }
+        .form-item {
+            display:flex; 
+            align-items:center; 
+            gap:10px; 
+            min-width:220px;
+            flex:1; 
+            margin-bottom:12px;
+        }
+        .form-item label {
+            width:155px; 
+            font-size:14px; 
+            color:var(--text-light); 
+            cursor:help;
+            position:relative; 
+            white-space:nowrap;
+        }
+        .form-item input {
+            flex:1; 
+            padding:10px; 
+            border:1px solid var(--border); 
+            border-radius:10px;
+            font-size:14px; 
+            min-width:100px; 
+            background:#fff;
+        }
+        .form-item input:focus { border-color:var(--main); box-shadow:0 0 0 3px rgba(45,140,240,0.1); }
+        .tip { font-size:12px; color:#888; white-space:nowrap; }
+        .rule { font-size:12px; color:var(--success); white-space:nowrap; }
+        .warn { color:var(--warn); font-size:14px; margin:12px 0; min-height:20px; }
+        
+        /* 按钮样式 */
+        .btn {
+            background:var(--main); 
+            color:#fff; 
+            border:none; 
+            padding:14px;
+            border-radius:12px; 
+            font-size:16px; 
+            font-weight:bold; 
+            cursor:pointer;
+            width:100%; 
+            margin-top:10px; 
+            box-shadow:0 4px 12px rgba(0,0,0,0.1);
+        }
+        .btn:active { transform:scale(0.98); }
+        
+        /* 结果展示区 - 优化排版 */
+        .result-box {
+            background:#fafbfc; 
+            padding:20px; 
+            border-radius:14px; 
+            white-space:pre-wrap;
+            font-size:14px; 
+            line-height:2; 
+            color:var(--text); 
+            border:1px solid var(--border);
+            font-family: "Microsoft YaHei", monospace;
+        }
+        /* 说明表格 */
+        .explain-table {
+            width:100%; 
+            border-collapse:collapse; 
+            margin:12px 0; 
+            font-size:13px;
+        }
+        .explain-table th, .explain-table td { border:1px solid var(--border); padding:10px; text-align:center; }
+        .explain-table th { background:var(--main-light); color:var(--main); font-weight:bold; }
+
+        /* 法律提示框 */
+        .law-tooltip {
+            position:absolute; 
+            background:#fffbe6; 
+            color:#333; 
+            border:1px solid #f0c040;
+            border-radius:8px; 
+            padding:10px 14px; 
+            font-size:12px; 
+            line-height:1.5;
+            max-width:320px; 
+            word-break:break-word; 
+            z-index:9999; 
+            pointer-events:none;
+            box-shadow:0 4px 14px rgba(0,0,0,0.1); 
+            white-space:normal;
+            display:none; 
+            left:0; 
+            top:0;
+        }
+
+        /* 子页面统一隐藏 */
+        .social-sub-page, .tax-sub-page {
+            display: none;
+        }
+        .social-sub-page.show, .tax-sub-page.show {
+            display: block;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 800px) {
+            .container { flex-direction:column; padding:12px; gap:12px; }
+            .side-panel { width:100%; height:auto; position:relative; top:0; min-height:380px; }
+            .side-body { min-height:350px; }
+            .calc-buttons { gap:6px; }
+            .calc-btn { padding:16px 0; font-size:20px; }
+            .form-item { flex-direction:column; align-items:flex-start; }
+            .form-item label { width:100%; }
+        }
+    </style>
+</head>
+<body class="theme-blue font-yahei">
+
+<div class="container">
+    <div class="side-panel">
+        <div class="side-tabs">
+            <div class="side-tab active" onclick="switchSide(1)">📝 备忘录</div>
+            <div class="side-tab" onclick="switchSide(2)">🧮 计算器</div>
+        </div>
+        <div class="side-body">
+            <div class="side-page show" id="sidePage1">
+                <textarea id="memoInput" placeholder="在这里输入你的备注信息..."></textarea>
+            </div>
+            <div class="side-page" id="sidePage2">
+                <input type="text" id="calcInput" readonly placeholder="0">
+                <div class="calc-buttons">
+                    <button class="calc-btn" onclick="appendCalc('7')">7</button>
+                    <button class="calc-btn" onclick="appendCalc('8')">8</button>
+                    <button class="calc-btn" onclick="appendCalc('9')">9</button>
+                    <button class="calc-btn" onclick="appendCalc('/')">÷</button>
+                    <button class="calc-btn" onclick="appendCalc('4')">4</button>
+                    <button class="calc-btn" onclick="appendCalc('5')">5</button>
+                    <button class="calc-btn" onclick="appendCalc('6')">6</button>
+                    <button class="calc-btn" onclick="appendCalc('*')">×</button>
+                    <button class="calc-btn" onclick="appendCalc('1')">1</button>
+                    <button class="calc-btn" onclick="appendCalc('2')">2</button>
+                    <button class="calc-btn" onclick="appendCalc('3')">3</button>
+                    <button class="calc-btn" onclick="appendCalc('-')">−</button>
+                    <button class="calc-btn" onclick="clearCalc()">C</button>
+                    <button class="calc-btn" onclick="appendCalc('0')">0</button>
+                    <button class="calc-btn" onclick="appendCalc('.')">.</button>
+                    <button class="calc-btn" onclick="appendCalc('+')">+</button>
+                    <button class="calc-btn eq" onclick="calcResult()">=</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-title" onclick="askDownload()">
+            <h1>社保和个人所得税计算器</h1>
+            <p>Insurance & Tax Calculator</p>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab active" onclick="switchPage(1)">社保缴费计算</div>
+            <div class="tab" onclick="switchPage(2)">个人所得税</div>
+        </div>
+
+        <!-- 社保页面 -->
+        <div class="page show" id="page1">
+            <div class="card">
+                <div class="title">社保缴费计算器</div>
+                <div class="sub-tab-bar">
+                    <div class="sub-tab-btn active" onclick="switchSocialSub(1)">企业职工五险一金</div>
+                    <div class="sub-tab-btn" onclick="switchSocialSub(2)">灵活就业社保</div>
+                </div>
+
+                <!-- 企业职工五险一金（默认显示） -->
+                <div class="social-sub-page show" id="socialSub1">
+                    <div class="section"><h4>基础信息</h4>
+                        <div class="form-item"><label>税前工资：</label><input type="number" id="salary" value="10000" oninput="syncSalaryToTax()"><span class="tip">元/月</span></div>
+                        <div style="margin-bottom:12px;">
+                            <label><input type="radio" name="baseType" id="useFixed" checked> 统一缴费基数</label>
+                            <label style="margin-left:16px;"><input type="radio" name="baseType" id="useSalary"> 按工资计算</label>
+                        </div>
+                        <div class="form-item"><label>五险下限：</label><input type="number" id="baseMin" value="4986"></div>
+                        <div class="form-item"><label>五险上限：</label><input type="number" id="baseMax" value="38907"></div>
+                        <div class="form-item"><label>五险基数：</label><input type="number" id="baseNum" value="4986"></div>
+                        <div style="margin:12px 0;">
+                            <label><input type="radio" name="fundBaseType" id="fundUseSame" checked> 公积金同五险</label>
+                            <label style="margin-left:16px;"><input type="radio" name="fundBaseType" id="fundUseCustom"> 公积金单独设置</label>
+                        </div>
+                        <div class="form-item"><label>公积金下限：</label><input type="number" id="fundBaseMin" value="4986"></div>
+                        <div class="form-item"><label>公积金上限：</label><input type="number" id="fundBaseMax" value="38907"></div>
+                        <div class="form-item"><label>公积金基数：</label><input type="number" id="fundBaseNum" value="4986"></div>
+                    </div>
+                    <div class="section"><h4>单位缴费比例</h4>
+                        <div class="form-row">
+                            <div class="form-item"><label>养老：</label><input type="number" id="cPen" value="14"><span class="rule">14%~16%</span></div>
+                            <div class="form-item"><label>医疗：</label><input type="number" id="cMed" value="7"><span class="rule">7%~9%</span></div>
+                            <div class="form-item"><label>失业：</label><input type="number" id="cUn" value="0.3"><span class="rule">0.3%~0.8%</span></div>
+                            <div class="form-item"><label>工伤：</label><input type="number" id="cInj" value="0.2"><span class="rule">0.2%~1.9%</span></div>
+                            <div class="form-item"><label>公积金：</label><input type="number" id="cFund" value="5"><span class="rule">5%~12%</span></div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="calc()">立即计算</button>
+                    <div class="warn" id="msg"></div>
+                </div>
+
+                <!-- 灵活就业社保（默认隐藏） -->
+                <div class="social-sub-page" id="socialSub2">
+                    <div class="section"><h4>缴费参数</h4>
+                        <div class="form-item"><label>当地最低工资：</label><input type="number" id="flexMinWage" value="2690"></div>
+                        <div class="form-item"><label>上年度平均工资：</label><input type="number" id="flexAvgWage" value="12000"></div>
+                        <div class="form-item"><label>缴费基数：</label><input type="number" id="flexBase" value="4986"><span class="tip">最低工资~平均工资×3</span></div>
+                        <div class="form-item"><label>养老比例：</label><input type="number" id="flexPen" value="20"><span class="rule">20%~28%</span></div>
+                        <div class="form-item"><label>医保比例：</label><input type="number" id="flexMed" value="8"><span class="rule">8%~12%</span></div>
+                        <div class="form-item"><label>失业比例：</label><input type="number" id="flexUn" value="0"><span class="rule">按地方规定</span></div>
+                        <div class="form-item"><label>公积金比例：</label><input type="number" id="flexFund" value="0"><span class="rule">按地方规定</span></div>
+                    </div>
+                    <button class="btn" onclick="calcFlex()">计算当月费用</button>
+                    <div class="warn" id="msg2"></div>
+                </div>
+            </div>
+            <div class="card" id="resultCard"><h4>计算结果</h4><div class="result-box" id="result"></div></div>
+            <div class="card" id="flexResultCard" style="display:none;"><h4>灵活就业缴费结果</h4><div class="result-box" id="result2"></div></div>
+        </div>
+
+        <!-- 个税页面 -->
+        <div class="page" id="page2">
+            <div class="card">
+                <div class="title">个人所得税计算器（年度汇算）</div>
+                <div class="sub-tab-bar">
+                    <div class="sub-tab-btn active" onclick="switchTaxSub(1)">🧮 个税计算</div>
+                    <div class="sub-tab-btn" onclick="switchTaxSub(2)">📋 扣除标准</div>
+                    <div class="sub-tab-btn" onclick="switchTaxSub(3)">📊 综合税率表</div>
+                    <div class="sub-tab-btn" onclick="switchTaxSub(4)">📈 经营税率表</div>
+                    <div class="sub-tab-btn" onclick="switchTaxSub(5)">💰 比例税率说明</div>
+                    <div class="sub-tab-btn" onclick="switchTaxSub(6)">🔄 计算流程</div>
+                </div>
+
+                <!-- 子页1：个税计算（默认显示） -->
+                <div class="tax-sub-page show" id="taxSub1">
+                    <div class="section"><h4>年度综合所得收入</h4>
+                        <div class="form-item"><label data-law="工资、薪金所得，是指个人因任职或者受雇取得的工资、薪金、奖金、年终加薪、劳动分红、津贴、补贴以及与任职或者受雇有关的其他所得。">工资薪金所得：</label><input type="number" id="yearSalary" value="120000" oninput="syncTaxToSalary()"></div>
+                        <div class="form-item"><label data-law="劳务报酬所得，是指个人独立从事各种非雇佣劳务取得的所得。">劳务报酬所得：</label><input type="number" id="yearLabor" value="0"></div>
+                        <div class="form-item"><label data-law="稿酬所得，是指个人因其作品以图书、报刊等形式出版、发表而取得的所得。">稿酬所得：</label><input type="number" id="yearAuthor" value="0"></div>
+                        <div class="form-item"><label data-law="特许权使用费所得，是指个人提供专利权、商标权、著作权、非专利技术以及其他特许权的使用权取得的所得。">特许权使用费：</label><input type="number" id="yearRoyalty" value="0"></div>
+                    </div>
+                    <div class="section"><h4>年度经营所得</h4>
+                        <div class="form-item"><label data-law="经营所得，以每一纳税年度的收入总额减除成本、费用以及损失后的余额，为应纳税所得额。">经营所得：</label><input type="number" id="yearBusiness" value="0"><span class="tip">已扣除成本</span></div>
+                    </div>
+                    <div class="section"><h4>比例税率所得</h4>
+                        <div class="form-item"><label data-law="利息、股息、红利所得，以每次收入额为应纳税所得额，适用比例税率20%。">利息股息红利：</label><input type="number" id="yearDividend" value="0"></div>
+                        <div class="form-item"><label data-law="财产租赁所得，每次收入不超过四千元的，减除费用八百元；四千元以上的，减除百分之二十的费用，其余额为应纳税所得额。还可扣除修缮费用。">财产租赁所得：</label><input type="number" id="yearRentAsset" value="0"></div>
+                        <div class="form-item"><label> 可扣除费用：</label><input type="number" id="rentDeduction" value="0" placeholder="修缮等"></div>
+                        <div class="form-item"><label data-law="财产转让所得，以转让财产的收入额减除财产原值和合理费用后的余额，为应纳税所得额。">财产转让所得：</label><input type="number" id="yearTransfer" value="0"></div>
+                        <div class="form-item"><label> 原值及费用：</label><input type="number" id="transferCost" value="0"></div>
+                        <div class="form-item"><label data-law="偶然所得，以每次收入额为应纳税所得额，适用比例税率20%。">偶然所得：</label><input type="number" id="yearLuck" value="0"></div>
+                    </div>
+                    <div class="section"><h4>年度扣除项目</h4>
+                        <div class="form-item"><label>五险一金个人部分：</label><input type="number" id="yearSocial" value="24000" readonly><span class="tip">自动联动</span></div>
+                        <div class="form-item"><label data-law="纳税人的子女教育、继续教育、住房贷款利息、住房租金、赡养老人、3岁以下婴幼儿照护等专项附加扣除。">专项附加扣除合计：</label><input type="number" id="totalSpecialDeductionSum" value="12000" readonly></div>
+                        <div class="form-item"><label data-law="纳税人的子女接受全日制学历教育的相关支出，按照每个子女每月1000元的标准定额扣除。">子女教育：</label><input type="number" id="yearChild" value="12000" oninput="updateSpecialTotal()"></div>
+                        <div class="form-item"><label data-law="纳税人在中国境内接受学历（学位）继续教育的支出，在学历（学位）教育期间按照每月400元定额扣除。">继续教育：</label><input type="number" id="yearEdu" value="0" oninput="updateSpecialTotal()"></div>
+                        <div class="form-item"><label data-law="纳税人本人或其配偶单独或共同使用商业银行或住房公积金个人住房贷款购买中国境内住房，发生的首套住房贷款利息支出，在实际发生贷款利息的年度，按照每月1000元的标准定额扣除。">住房贷款利息：</label><input type="number" id="yearLoan" value="0" oninput="updateSpecialTotal()"></div>
+                        <div class="form-item"><label data-law="纳税人在主要工作城市没有自有住房而发生的住房租金支出，根据城市不同，每月扣除标准为800、1100或1500元。">住房租金：</label><input type="number" id="yearRent" value="0" oninput="updateSpecialTotal()"></div>
+                        <div class="form-item"><label data-law="纳税人赡养一位及以上被赡养人的赡养支出，按照每月2000元的标准定额扣除。">赡养老人：</label><input type="number" id="yearElder" value="0" oninput="updateSpecialTotal()"></div>
+                        <div class="form-item"><label data-law="纳税人照护3岁以下婴幼儿子女的相关支出，按照每个婴幼儿每月1000元的标准定额扣除。">婴幼儿照护：</label><input type="number" id="yearBaby" value="0" oninput="updateSpecialTotal()"></div>
+                    </div>
+                    <button class="btn" onclick="calcYearTaxSuper()">计算年度个税</button>
+                    <div class="warn" id="msg4"></div>
+                </div>
+
+                <!-- 子页2：扣除标准 -->
+                <div class="tax-sub-page" id="taxSub2">
+                    <table class="explain-table">
+                        <tr><th>项目</th><th>年度扣除标准</th></tr>
+                        <tr><td>子女教育</td><td>12000元/子女</td></tr>
+                        <tr><td>继续教育</td><td>4800元</td></tr>
+                        <tr><td>住房贷款利息</td><td>12000元</td></tr>
+                        <tr><td>住房租金</td><td>9600~18000元</td></tr>
+                        <tr><td>赡养老人</td><td>24000元</td></tr>
+                        <tr><td>婴幼儿照护</td><td>12000元/婴幼儿</td></tr>
+                    </table>
+                </div>
+                
+                <!-- 子页3：综合税率表 -->
+                <div class="tax-sub-page" id="taxSub3">
+                    <table class="explain-table">
+                        <tr><th>级数</th><th>全年应纳税所得额</th><th>税率(%)</th><th>速算扣除数</th></tr>
+                        <tr><td>1</td><td>不超过36000</td><td>3</td><td>0</td></tr>
+                        <tr><td>2</td><td>36000~144000</td><td>10</td><td>2520</td></tr>
+                        <tr><td>3</td><td>144000~300000</td><td>20</td><td>16920</td></tr>
+                        <tr><td>4</td><td>300000~420000</td><td>25</td><td>31920</td></tr>
+                        <tr><td>5</td><td>420000~660000</td><td>30</td><td>52920</td></tr>
+                        <tr><td>6</td><td>660000~960000</td><td>35</td><td>85920</td></tr>
+                        <tr><td>7</td><td>超过960000</td><td>45</td><td>181920</td></tr>
+                    </table>
+                </div>
+                
+                <!-- 子页4：经营税率表 -->
+                <div class="tax-sub-page" id="taxSub4">
+                    <table class="explain-table">
+                        <tr><th>级数</th><th>全年应纳税所得额</th><th>税率(%)</th><th>速算扣除数</th></tr>
+                        <tr><td>1</td><td>不超过30000</td><td>5</td><td>0</td></tr>
+                        <tr><td>2</td><td>30000~90000</td><td>10</td><td>1500</td></tr>
+                        <tr><td>3</td><td>90000~300000</td><td>20</td><td>10500</td></tr>
+                        <tr><td>4</td><td>300000~500000</td><td>30</td><td>40500</td></tr>
+                        <tr><td>5</td><td>超过500000</td><td>35</td><td>65500</td></tr>
+                    </table>
+                </div>
+                
+                <!-- 子页5：比例税率说明 -->
+                <div class="tax-sub-page" id="taxSub5">
+                    <table class="explain-table">
+                        <tr><th>所得类型</th><th>计税依据</th><th>税率</th></tr>
+                        <tr><td>利息股息红利</td><td>全额</td><td>20%</td></tr>
+                        <tr><td>财产租赁</td><td>收入 - 租赁可扣除费用</td><td>20%</td></tr>
+                        <tr><td>财产转让</td><td>收入 - 财产原值及费用</td><td>20%</td></tr>
+                        <tr><td>偶然所得</td><td>全额</td><td>20%</td></tr>
+                    </table>
+                </div>
+                
+                <!-- 子页6：计算流程 -->
+                <div class="tax-sub-page" id="taxSub6">
+                    <div style="background:#f8f9fa; padding:16px; border-radius:12px; line-height:2;">
+                        ① 汇总综合所得收入额<br/>
+                        ② 减除费用60000元/年<br/>
+                        ③ 减除个人五险一金<br/>
+                        ④ 减除专项附加扣除<br/>
+                        ⑤ 得出应纳税所得额，查综合税率表<br/>
+                        ⑥ 加上经营所得税<br/>
+                        ⑦ 加上各项比例税率所得税<br/>
+                        ⑧ 减去已预扣预缴税额<br/>
+                        ⑨ 得到应补(退)税额
+                    </div>
+                </div>
+            </div>
+            <div class="card"><h4>详细计算结果</h4><div class="result-box" id="result4"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 悬浮设置面板（左下角） -->
+<div class="float-panel" id="dragPanel">
+    <div class="float-btn" id="gearBtn">⚙️</div>
+    <div class="float-body" id="settingsPanel">
+        <label>主题颜色：</label>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <div onclick="setTheme('red')" style="width:30px;height:30px;border-radius:50%;background:#ffebee;border:2px solid #fff;cursor:pointer;"></div>
+            <div onclick="setTheme('yellow')" style="width:30px;height:30px;border-radius:50%;background:#fff4e0;border:2px solid #fff;cursor:pointer;"></div>
+            <div onclick="setTheme('green')" style="width:30px;height:30px;border-radius:50%;background:#e8f5e9;border:2px solid #fff;cursor:pointer;"></div>
+            <div onclick="setTheme('blue')" style="width:30px;height:30px;border-radius:50%;background:#e8f3ff;border:2px solid #fff;cursor:pointer;"></div>
+            <div onclick="setTheme('purple')" style="width:30px;height:30px;border-radius:50%;background:#f3e5f5;border:2px solid #fff;cursor:pointer;"></div>
+        </div>
+        <label>字体切换：</label>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+            <button onclick="setFont('yahei')" style="padding:8px;border-radius:8px;border:1px solid #ddd;background:#e8f3ff;">微软雅黑</button>
+            <button onclick="setFont('song')" style="padding:8px;border-radius:8px;border:1px solid #ddd;">仿宋</button>
+            <button onclick="setFont('kai')" style="padding:8px;border-radius:8px;border:1px solid #ddd;">楷书</button>
+            <button onclick="setFont('xingcao')" style="padding:8px;border-radius:8px;border:1px solid #ddd;">行草</button>
+        </div>
+    </div>
+</div>
+
+<div id="lawTooltip" class="law-tooltip"></div>
+
+<script>
+    (function() {
+        let sharedMonthlyTax = 0, sharedMonthlySocial = 0, isSettingsOpen = false;
+
+        // 齿轮面板拖动 (左下角固定但可拖)
+        const dragPanel = document.getElementById('dragPanel');
+        let isDragging = false, startX, startY, initialLeft, initialTop;
+        dragPanel.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#gearBtn') || e.target.closest('.float-body')) return;
+            isDragging = true;
+            const rect = dragPanel.getBoundingClientRect();
+            startX = e.clientX; startY = e.clientY;
+            initialLeft = rect.left; initialTop = rect.top;
+            dragPanel.style.left = initialLeft + 'px';
+            dragPanel.style.top = initialTop + 'px';
+            dragPanel.style.right = 'auto';
+            dragPanel.style.bottom = 'auto';
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            dragPanel.style.left = (initialLeft + e.clientX - startX) + 'px';
+            dragPanel.style.top = (initialTop + e.clientY - startY) + 'px';
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        document.getElementById('gearBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('show');
+            isSettingsOpen = panel.classList.contains('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#dragPanel')) {
+                document.getElementById('settingsPanel').classList.remove('show');
+                isSettingsOpen = false;
+            }
+        });
+
+        window.setTheme = t => document.body.className = 'theme-' + t + ' ' + (document.body.className.split(' ').pop() || 'font-yahei');
+        window.setFont = f => {
+            const cls = document.body.className.split(' ');
+            const themeCls = cls.find(c => c.startsWith('theme-')) || 'theme-blue';
+            document.body.className = themeCls + ' font-' + f;
+        };
+
+        // 左侧面板切换
+        window.switchSide = num => {
+            document.querySelectorAll('.side-page').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.side-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('sidePage' + num).classList.add('show');
+            document.querySelectorAll('.side-tab')[num - 1].classList.add('active');
+        };
+
+        // 计算器功能
+        window.appendCalc = v => document.getElementById('calcInput').value += v;
+        window.clearCalc = () => document.getElementById('calcInput').value = '';
+        window.calcResult = () => {
+            const input = document.getElementById('calcInput').value;
+            const expr = input.replace(/×/g, '*').replace(/÷/g, '/');
+            if (!/^[0-9+\-*/.() ]+$/.test(expr)) { alert('表达式包含非法字符'); return; }
+            try {
+                const result = new Function('"use strict"; return (' + expr + ')')();
+                document.getElementById('calcInput').value = isFinite(result) ? result : '错误';
+            } catch (e) { alert('计算错误'); }
+        };
+
+        // 一级标签页切换（社保/个税）
+        window.switchPage = num => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('page' + num).classList.add('show');
+            document.querySelectorAll('.tab')[num - 1].classList.add('active');
+        };
+
+        // 社保二级标签页（严格互斥）
+        window.switchSocialSub = num => {
+            // 隐藏所有社保子页面
+            document.querySelectorAll('.social-sub-page').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('#page1 .sub-tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // 只显示当前选中的
+            document.getElementById('socialSub' + num).classList.add('show');
+            document.querySelectorAll('#page1 .sub-tab-btn')[num - 1].classList.add('active');
+            
+            // 结果卡片严格对应
+            document.getElementById('resultCard').style.display = num === 1 ? 'block' : 'none';
+            document.getElementById('flexResultCard').style.display = num === 2 ? 'block' : 'none';
+        };
+
+        // 个税二级标签页（严格互斥）
+        window.switchTaxSub = num => {
+            // 隐藏所有个税子页面
+            document.querySelectorAll('.tax-sub-page').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('#page2 .sub-tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // 只显示当前选中的
+            document.getElementById('taxSub' + num).classList.add('show');
+            document.querySelectorAll('#page2 .sub-tab-btn')[num - 1].classList.add('active');
+        };
+
+        // 工资联动
+        window.syncSalaryToTax = () => document.getElementById('yearSalary').value = (+document.getElementById('salary').value || 0) * 12;
+        window.syncTaxToSalary = () => document.getElementById('salary').value = Math.round((+document.getElementById('yearSalary').value || 0) / 12);
+
+        // 专项附加扣除自动求和
+        window.updateSpecialTotal = () => {
+            const child = +document.getElementById('yearChild').value || 0;
+            const edu = +document.getElementById('yearEdu').value || 0;
+            const loan = +document.getElementById('yearLoan').value || 0;
+            const rent = +document.getElementById('yearRent').value || 0;
+            const elder = +document.getElementById('yearElder').value || 0;
+            const baby = +document.getElementById('yearBaby').value || 0;
+            const total = child + edu + loan + rent + elder + baby;
+            document.getElementById('totalSpecialDeductionSum').value = total;
+        };
+
+        // 保留两位小数
+        function fix(n) { return parseFloat(n.toFixed(2)); }
+        // 缴费比例规则
+        const RULE = { comPen: [14, 16], comMed: [7, 9], comUn: [0.3, 0.8], comInj: [0.2, 1.9], fund: [5, 12] };
+        
+        // 校验数值范围
+        function check(v, min, max, name) {
+            const n = +v;
+            return isNaN(n) || n < min || n > max ? { ok: 0, msg: name + '须在' + min + '-' + max + '%之间' } : { ok: 1, val: n };
+        }
+
+        // 社保计算
+        window.calc = function () {
+            const salary = +document.getElementById('salary').value || 0;
+            const bMin = +document.getElementById('baseMin').value, bMax = +document.getElementById('baseMax').value;
+            const bNum = +document.getElementById('baseNum').value, useFix = document.getElementById('useFixed').checked;
+            const fSame = document.getElementById('fundUseSame').checked;
+            const fMin = +document.getElementById('fundBaseMin').value, fMax = +document.getElementById('fundBaseMax').value;
+            const fNum = +document.getElementById('fundBaseNum').value;
+
+            let sBase = useFix ? bNum : salary; 
+            sBase = Math.max(bMin, Math.min(bMax, sBase));
+            let fBase = fSame ? sBase : fNum; 
+            fBase = Math.max(fMin, Math.min(fMax, fBase));
+
+            const ck1 = check(document.getElementById('cPen').value, RULE.comPen[0], RULE.comPen[1], '养老比例');
+            const ck2 = check(document.getElementById('cMed').value, RULE.comMed[0], RULE.comMed[1], '医疗比例');
+            const ck3 = check(document.getElementById('cUn').value, RULE.comUn[0], RULE.comUn[1], '失业比例');
+            const ck4 = check(document.getElementById('cInj').value, RULE.comInj[0], RULE.comInj[1], '工伤比例');
+            const ck5 = check(document.getElementById('cFund').value, RULE.fund[0], RULE.fund[1], '公积金比例');
+            if (!ck1.ok || !ck2.ok || !ck3.ok || !ck4.ok || !ck5.ok) {
+                return document.getElementById('msg').innerText = ck1.msg || ck2.msg || ck3.msg || ck4.msg || ck5.msg;
+            }
+
+            const cPen = ck1.val / 100, cMed = ck2.val / 100;
+            const cUn = ck3.val / 100, cInj = ck4.val / 100, cFund = ck5.val / 100;
+            
+            const unitPen = fix(sBase * cPen);
+            const unitMed = fix(sBase * cMed);
+            const unitUn = fix(sBase * cUn);
+            const unitInj = fix(sBase * cInj);
+            const unit5Ins = fix(unitPen + unitMed + unitUn + unitInj);
+            const unitFund = fix(fBase * cFund);
+            const unitTotal = fix(unit5Ins + unitFund);
+
+            const personalPen = fix(sBase * 0.08);
+            const personalMed = fix(sBase * 0.02);
+            const personalUn = fix(sBase * 0.005);
+            const personal5Ins = fix(personalPen + personalMed + personalUn);
+            const personalFund = fix(fBase * cFund);
+            const personalTotal = fix(personal5Ins + personalFund);
+
+            sharedMonthlySocial = personalTotal;
+            document.getElementById('yearSocial').value = fix(sharedMonthlySocial * 12);
+            const taxableIncome = fix(salary - personalTotal - 5000);
+            sharedMonthlyTax = taxableIncome > 0 ? fix(taxableIncome * 0.03) : 0;
+            const realSalary = fix(salary - personalTotal - sharedMonthlyTax);
+
+            const resultText = `【企业职工五险一金计算详情】
+┌──────────────────────────────────────────────
+│ 基础参数
+│ 税前工资：${salary} 元/月
+│ 五险基数：${fix(sBase)} 元（上下限：${bMin}~${bMax}）
+│ 公积金基数：${fix(fBase)} 元（上下限：${fMin}~${fMax}）
+├──────────────────────────────────────────────
+│ 单位缴费明细（计算过程）
+│ 养老：${fix(sBase)} × ${ck1.val}% = ${unitPen} 元
+│ 医疗：${fix(sBase)} × ${ck2.val}% = ${unitMed} 元
+│ 失业：${fix(sBase)} × ${ck3.val}% = ${unitUn} 元
+│ 工伤：${fix(sBase)} × ${ck4.val}% = ${unitInj} 元
+│ 五险合计：${unit5Ins} 元
+│ 公积金：${fix(fBase)} × ${ck5.val}% = ${unitFund} 元
+│ 单位总成本：${unitTotal} 元
+├──────────────────────────────────────────────
+│ 个人缴费明细（计算过程）
+│ 养老：${fix(sBase)} × 8% = ${personalPen} 元
+│ 医疗：${fix(sBase)} × 2% = ${personalMed} 元
+│ 失业：${fix(sBase)} × 0.5% = ${personalUn} 元
+│ 五险合计：${personal5Ins} 元
+│ 公积金：${fix(fBase)} × ${ck5.val}% = ${personalFund} 元
+│ 个人合计：${personalTotal} 元
+├──────────────────────────────────────────────
+│ 个税计算（简化版）
+│ 应纳税所得额：${salary} - ${personalTotal} - 5000 = ${taxableIncome} 元
+│ 月度个税：${taxableIncome > 0 ? taxableIncome + ' × 3% = ' + sharedMonthlyTax : '0'} 元
+├──────────────────────────────────────────────
+│ 最终结果
+│ 到手工资：${salary} - ${personalTotal} - ${sharedMonthlyTax} = ${realSalary} 元
+└──────────────────────────────────────────────`;
+
+            document.getElementById('msg').innerText = '';
+            document.getElementById('result').innerText = resultText;
+        };
+
+        // 灵活就业社保计算
+        window.calcFlex = function () {
+            const minWage = +document.getElementById('flexMinWage').value;
+            const avgWage = +document.getElementById('flexAvgWage').value;
+            const base = +document.getElementById('flexBase').value;
+            const penRate = +document.getElementById('flexPen').value / 100;
+            const medRate = +document.getElementById('flexMed').value / 100;
+            const unRate = +document.getElementById('flexUn').value / 100;
+            const fundRate = +document.getElementById('flexFund').value / 100;
+
+            const maxBase = fix(avgWage * 3);
+            if (base < minWage || base > maxBase) {
+                return document.getElementById('msg2').innerText = `缴费基数须在${minWage}~${maxBase}元之间`;
+            }
+
+            const penCost = fix(base * penRate);
+            const medCost = fix(base * medRate);
+            const unCost = fix(base * unRate);
+            const fundCost = fix(base * fundRate);
+            const totalCost = fix(penCost + medCost + unCost + fundCost);
+
+            const resultText = `【灵活就业社保缴费计算详情】
+┌──────────────────────────────────────────────
+│ 基础参数
+│ 当地最低工资：${minWage} 元
+│ 上年度平均工资：${avgWage} 元
+│ 缴费基数：${base} 元（合规范围：${minWage}~${maxBase}）
+├──────────────────────────────────────────────
+│ 缴费比例
+│ 养老保险：${penRate * 100}%    医疗保险：${medRate * 100}%
+│ 失业保险：${unRate * 100}%    公积金：${fundRate * 100}%
+├──────────────────────────────────────────────
+│ 费用计算（计算过程）
+│ 养老保险：${base} × ${penRate * 100}% = ${penCost} 元
+│ 医疗保险：${base} × ${medRate * 100}% = ${medCost} 元
+│ 失业保险：${base} × ${unRate * 100}% = ${unCost} 元
+│ 公积金：${base} × ${fundRate * 100}% = ${fundCost} 元
+├──────────────────────────────────────────────
+│ 最终结果
+│ 当月总缴费金额：${totalCost} 元
+└──────────────────────────────────────────────`;
+
+            document.getElementById('msg2').innerText = '';
+            document.getElementById('result2').innerText = resultText;
+        };
+
+        // 年度个税计算（已加固：应纳税所得额 ≥ 0）
+        window.calcYearTaxSuper = function () {
+            const yearSalary = +document.getElementById('yearSalary').value || 0;
+            const yearLabor = +document.getElementById('yearLabor').value || 0;
+            const yearAuthor = +document.getElementById('yearAuthor').value || 0;
+            const yearRoyalty = +document.getElementById('yearRoyalty').value || 0;
+            const yearBusiness = +document.getElementById('yearBusiness').value || 0;
+            const yearDividend = +document.getElementById('yearDividend').value || 0;
+            const yearRentAsset = +document.getElementById('yearRentAsset').value || 0;
+            const rentDeduction = +document.getElementById('rentDeduction').value || 0;
+            const yearTransfer = +document.getElementById('yearTransfer').value || 0;
+            const transferCost = +document.getElementById('transferCost').value || 0;
+            const yearLuck = +document.getElementById('yearLuck').value || 0;
+
+            const yearSocial = +document.getElementById('yearSocial').value || 0;
+            const yearChild = +document.getElementById('yearChild').value || 0;
+            const yearEdu = +document.getElementById('yearEdu').value || 0;
+            const yearLoan = +document.getElementById('yearLoan').value || 0;
+            const yearRent = +document.getElementById('yearRent').value || 0;
+            const yearElder = +document.getElementById('yearElder').value || 0;
+            const yearBaby = +document.getElementById('yearBaby').value || 0;
+
+            const laborTax = fix(yearLabor * 0.8);
+            const authorTax = fix(yearAuthor * 0.8 * 0.7);
+            const royaltyTax = fix(yearRoyalty * 0.8);
+            const totalComprehensive = fix(yearSalary + laborTax + authorTax + royaltyTax);
+
+            const totalSpecialDeduction = fix(yearChild + yearEdu + yearLoan + yearRent + yearElder + yearBaby);
+            
+            // ====================== 核心修复：应纳税所得额不小于0 ======================
+            let comprehensiveTaxable = fix(totalComprehensive - 60000 - yearSocial - totalSpecialDeduction);
+            comprehensiveTaxable = Math.max(comprehensiveTaxable, 0); // 兜底保护，最小为0
+            // =========================================================================
+            
+            let comprehensiveTax = 0;
+            if (comprehensiveTaxable > 0) {
+                if (comprehensiveTaxable <= 36000) {
+                    comprehensiveTax = fix(comprehensiveTaxable * 0.03);
+                } else if (comprehensiveTaxable <= 144000) {
+                    comprehensiveTax = fix(36000 * 0.03 + (comprehensiveTaxable - 36000) * 0.1 - 2520);
+                } else if (comprehensiveTaxable <= 300000) {
+                    comprehensiveTax = fix(144000 * 0.1 + (comprehensiveTaxable - 144000) * 0.2 - 16920);
+                } else if (comprehensiveTaxable <= 420000) {
+                    comprehensiveTax = fix(300000 * 0.2 + (comprehensiveTaxable - 300000) * 0.25 - 31920);
+                } else if (comprehensiveTaxable <= 660000) {
+                    comprehensiveTax = fix(420000 * 0.25 + (comprehensiveTaxable - 420000) * 0.3 - 52920);
+                } else if (comprehensiveTaxable <= 960000) {
+                    comprehensiveTax = fix(660000 * 0.3 + (comprehensiveTaxable - 660000) * 0.35 - 85920);
+                } else {
+                    comprehensiveTax = fix(960000 * 0.35 + (comprehensiveTaxable - 960000) * 0.45 - 181920);
+                }
+            }
+
+            let businessTax = 0;
+            if (yearBusiness > 0) {
+                if (yearBusiness <= 30000) {
+                    businessTax = fix(yearBusiness * 0.05);
+                } else if (yearBusiness <= 90000) {
+                    businessTax = fix(30000 * 0.05 + (yearBusiness - 30000) * 0.1 - 1500);
+                } else if (yearBusiness <= 300000) {
+                    businessTax = fix(90000 * 0.1 + (yearBusiness - 90000) * 0.2 - 10500);
+                } else if (yearBusiness <= 500000) {
+                    businessTax = fix(300000 * 0.2 + (yearBusiness - 300000) * 0.3 - 40500);
+                } else {
+                    businessTax = fix(500000 * 0.3 + (yearBusiness - 500000) * 0.35 - 65500);
+                }
+            }
+
+            const dividendTax = fix(yearDividend * 0.2);
+            const rentTaxable = fix(yearRentAsset - rentDeduction);
+            const rentTax = fix(rentTaxable > 0 ? rentTaxable * 0.2 : 0);
+            const transferTaxable = fix(yearTransfer - transferCost);
+            const transferTax = fix(transferTaxable > 0 ? transferTaxable * 0.2 : 0);
+            const luckTax = fix(yearLuck * 0.2);
+            const ratioTaxTotal = fix(dividendTax + rentTax + transferTax + luckTax);
+
+            const totalTax = fix(comprehensiveTax + businessTax + ratioTaxTotal);
+
+            const resultText = `【年度个人所得税计算详情】
+┌──────────────────────────────────────────────
+│ 一、收入明细
+│ 工资薪金所得：${yearSalary} 元
+│ 劳务报酬所得（计税）：${yearLabor} × 80% = ${laborTax} 元
+│ 稿酬所得（计税）：${yearAuthor} × 80% × 70% = ${authorTax} 元
+│ 特许权使用费（计税）：${yearRoyalty} × 80% = ${royaltyTax} 元
+│ 综合所得合计：${totalComprehensive} 元
+│ 
+│ 经营所得：${yearBusiness} 元
+│ 利息股息红利：${yearDividend} 元
+│ 财产租赁所得：${yearRentAsset} 元（可扣除：${rentDeduction}）
+│ 财产转让所得：${yearTransfer} 元（原值及费用：${transferCost}）
+│ 偶然所得：${yearLuck} 元
+├──────────────────────────────────────────────
+│ 二、扣除项目
+│ 基本减除费用：60000 元/年
+│ 五险一金个人部分：${yearSocial} 元
+│ 专项附加扣除明细：
+│   - 子女教育：${yearChild} 元
+│   - 继续教育：${yearEdu} 元
+│   - 住房贷款利息：${yearLoan} 元
+│   - 住房租金：${yearRent} 元
+│   - 赡养老人：${yearElder} 元
+│   - 婴幼儿照护：${yearBaby} 元
+│ 专项附加扣除合计：${totalSpecialDeduction} 元
+├──────────────────────────────────────────────
+│ 三、综合所得计税
+│ 应纳税所得额：${totalComprehensive} - 60000 - ${yearSocial} - ${totalSpecialDeduction} = ${comprehensiveTaxable} 元
+│ 综合所得税：${comprehensiveTaxable > 0 ? comprehensiveTax : 0} 元
+├──────────────────────────────────────────────
+│ 四、经营所得计税
+│ 应纳税所得额：${yearBusiness} 元
+│ 经营所得税：${businessTax} 元
+├──────────────────────────────────────────────
+│ 五、比例税率所得计税
+│ 利息股息红利税：${yearDividend} × 20% = ${dividendTax} 元
+│ 财产租赁税：${rentTaxable > 0 ? rentTaxable + ' × 20% = ' + rentTax : '0'} 元
+│ 财产转让税：${transferTaxable > 0 ? transferTaxable + ' × 20% = ' + transferTax : '0'} 元
+│ 偶然所得税：${yearLuck} × 20% = ${luckTax} 元
+│ 比例税率税合计：${ratioTaxTotal} 元
+├──────────────────────────────────────────────
+│ 六、最终结果
+│ 年度总个税：${comprehensiveTax} + ${businessTax} + ${ratioTaxTotal} = ${totalTax} 元
+└──────────────────────────────────────────────`;
+
+            document.getElementById('msg4').innerText = '';
+            document.getElementById('result4').innerText = resultText;
+        };
+
+        // 法律提示框
+        const lawLabels = document.querySelectorAll('.form-item label[data-law]');
+        const lawTooltip = document.getElementById('lawTooltip');
+        lawLabels.forEach(label => {
+            label.addEventListener('mouseenter', (e) => {
+                lawTooltip.innerText = e.target.getAttribute('data-law');
+                lawTooltip.style.display = 'block';
+                lawTooltip.style.left = (e.target.offsetLeft + e.target.offsetWidth + 10) + 'px';
+                lawTooltip.style.top = (e.target.offsetTop - 10) + 'px';
+            });
+            label.addEventListener('mouseleave', () => {
+                lawTooltip.style.display = 'none';
+            });
+        });
+
+        // 下载提示
+        window.askDownload = () => {
+            alert('如需下载计算器离线版，请联系管理员获取！');
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            calc();
+            setTheme('blue');
+            setFont('yahei');
+            updateSpecialTotal();
+        });
+    })();
+</script>
+</body>
+</html>
