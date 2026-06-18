@@ -30,41 +30,41 @@
         <view class="card">
           <text class="title">计算结果</text>
           <view class="big">
-            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{takeHome}}</text></view>
-            <view class="bi"><text class="bl">个人社保</text><text class="bv red">{{personalTotal}}</text></view>
+            <view class="bi"><text class="bl">到手工资</text><text class="bv">{{r.takeHome}}</text></view>
+            <view class="bi"><text class="bl">个人社保</text><text class="bv red">{{r.pt}}</text></view>
           </view>
           <text class="st">📝 详细计算过程</text>
           <view class="det">
             <text class="dh">【基数确定】</text>
             <text class="dc">输入工资: {{salary}} 元</text>
             <text class="dc">社保基数上下限: {{cfg.social.baseMin}} ~ {{cfg.social.baseMax}}</text>
-            <text class="dhl">→ 实际社保基数: {{socialBase}} 元</text>
-            <text class="dc" v-if="fundBase">公积金基数: {{fundBaseResult}} 元（单独设置）</text>
-            <text class="dc" v-else>公积金基数: {{socialBase}} 元（等于社保基数）</text>
+            <text class="dhl">→ 实际社保基数: {{r.base}} 元</text>
+            <text class="dc" v-if="fundBase">公积金基数: {{r.fb}} 元（单独设置）</text>
+            <text class="dc" v-else>公积金基数: {{r.base}} 元（等于社保基数）</text>
           </view>
           <view class="det">
             <text class="dh">【单位缴费】</text>
-            <text class="dc">养老 = {{socialBase}} × {{cfg.social.employerPension}}% = {{employerPension}} 元</text>
-            <text class="dc">医疗 = {{socialBase}} × {{cfg.social.employerMedical}}% = {{employerMedical}} 元</text>
-            <text class="dc">失业 = {{socialBase}} × {{cfg.social.employerUnemployment}}% = {{employerUnemployment}} 元</text>
-            <text class="dc">工伤 = {{socialBase}} × {{cfg.social.employerInjury}}% = {{employerInjury}} 元</text>
-            <text class="dc">公积金 = {{fundBaseResult}} × {{fundRate}}% = {{employerFund}} 元</text>
-            <text class="dhl">单位合计: {{employerTotal}} 元</text>
+            <text class="dc">养老 = {{r.base}} × {{cfg.social.employerPension}}% = {{r.ep}} 元</text>
+            <text class="dc">医疗 = {{r.base}} × {{cfg.social.employerMedical}}% = {{r.em}} 元</text>
+            <text class="dc">失业 = {{r.base}} × {{cfg.social.employerUnemployment}}% = {{r.eu}} 元</text>
+            <text class="dc">工伤 = {{r.base}} × {{cfg.social.employerInjury}}% = {{r.ei}} 元</text>
+            <text class="dc">公积金 = {{r.fb}} × {{fundRate}}% = {{r.ef}} 元</text>
+            <text class="dhl">单位合计: {{r.et}} 元</text>
           </view>
           <view class="det">
             <text class="dh">【个人缴费】</text>
-            <text class="dc">养老 = {{socialBase}} × {{cfg.social.employeePension}}% = {{employeePension}} 元</text>
-            <text class="dc">医疗 = {{socialBase}} × {{cfg.social.employeeMedical}}% = {{employeeMedical}} 元</text>
-            <text class="dc">失业 = {{socialBase}} × {{cfg.social.employeeUnemployment}}% = {{employeeUnemployment}} 元</text>
-            <text class="dc">公积金 = {{fundBaseResult}} × {{fundRate}}% = {{employeeFund}} 元</text>
-            <text class="dhl">个人合计: {{personalTotal}} 元/月，{{personalYearSocial}} 元/年</text>
+            <text class="dc">养老 = {{r.base}} × {{cfg.social.employeePension}}% = {{r.pp}} 元</text>
+            <text class="dc">医疗 = {{r.base}} × {{cfg.social.employeeMedical}}% = {{r.pm}} 元</text>
+            <text class="dc">失业 = {{r.base}} × {{cfg.social.employeeUnemployment}}% = {{r.pu}} 元</text>
+            <text class="dc">公积金 = {{r.fb}} × {{fundRate}}% = {{r.pf}} 元</text>
+            <text class="dhl">个人合计: {{r.pt}} 元/月，{{r.yearPt}} 元/年</text>
           </view>
           <view class="det">
             <text class="dh">【到手工资】</text>
             <text class="dc">税前工资: {{salary}} 元</text>
-            <text class="dc">个人社保: -{{personalTotal}} 元</text>
-            <text class="dc">预估个税: -{{monthlyTax}} 元</text>
-            <text class="dhl">到手工资: {{takeHome}} 元</text>
+            <text class="dc">个人社保: -{{r.pt}} 元</text>
+            <text class="dc">预估个税: -{{r.monthlyTax}} 元</text>
+            <text class="dhl">到手工资: {{r.takeHome}} 元</text>
           </view>
         </view>
       </view>
@@ -78,8 +78,8 @@
         </view>
         <view class="card">
           <text class="title">计算结果</text>
-          <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{flexTotal}}</text></view></view>
-          <view class="lst"><view class="li"><text>养老保险</text><text>{{flexPension}}</text></view><view class="li"><text>医疗保险</text><text>{{flexMedical}}</text></view></view>
+          <view class="big"><view class="bi"><text class="bl">当月应缴</text><text class="bv">{{fr.total}}</text></view></view>
+          <view class="lst"><view class="li"><text>养老保险</text><text>{{fr.p}}</text></view><view class="li"><text>医疗保险</text><text>{{fr.m}}</text></view></view>
         </view>
       </view>
     </view>
@@ -105,7 +105,7 @@
 
       <view class="card">
         <text class="title">扣除项目</text>
-        <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{personalYearSocial}} 元</text><text class="sync">自动同步</text></view>
+        <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{r.yearPt}} 元</text><text class="sync">自动同步</text></view>
         <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="onInput('tChild',$event)"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="onInput('tEdu',$event)"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="onInput('tLoan',$event)"/><text class="ut">元</text></view>
@@ -122,8 +122,8 @@
       <view class="card">
         <text class="title">计算结果</text>
         <view class="big">
-          <view class="bi"><text class="bl">年度总个税</text><text class="bv">{{taxTotal}}</text></view>
-          <view class="bi"><text class="bl">月均个税</text><text class="bv red">{{taxMonthly}}</text></view>
+          <view class="bi"><text class="bl">年度总个税</text><text class="bv">{{tr.totalTax}}</text></view>
+          <view class="bi"><text class="bl">月均个税</text><text class="bv red">{{tr.monthlyTax}}</text></view>
         </view>
 
         <view class="det">
@@ -132,26 +132,26 @@
           <text class="dc">劳务报酬: {{fmt((parseFloat(tLabor)||0)*12*0.8)}} 元 (×80%)</text>
           <text class="dc">稿酬所得: {{fmt((parseFloat(tAuthor)||0)*12*0.8*0.7)}} 元 (×80%×70%)</text>
           <text class="dc">特许权使用费: {{fmt((parseFloat(tRoyalty)||0)*12*0.8)}} 元 (×80%)</text>
-          <text class="dhl">综合所得合计: {{comprehensiveIncome}} 元</text>
+          <text class="dhl">综合所得合计: {{tr.comprehensiveIncome}} 元</text>
         </view>
 
         <view class="det">
           <text class="dh">【扣除项目】</text>
           <text class="dc">基本减除: 60,000 元</text>
-          <text class="dc">个人社保: {{personalYearSocial}} 元（自动同步）</text>
+          <text class="dc">个人社保: {{r.yearPt}} 元（自动同步）</text>
           <text class="dc">专项附加: {{fmt(specialTotal)}} 元</text>
-          <text class="dhl">扣除合计: {{comprehensiveDeduction}} 元</text>
+          <text class="dhl">扣除合计: {{tr.comprehensiveDeduction}} 元</text>
         </view>
 
         <view class="det">
           <text class="dh">【综合所得税】</text>
-          <text class="dc">应纳税所得额 = {{comprehensiveIncome}} - {{comprehensiveDeduction}} = {{taxableIncome}} 元</text>
-          <text class="dhl">综合所得税: {{comprehensiveTax}} 元 (税率{{comprehensiveBracket}})</text>
+          <text class="dc">应纳税所得额 = {{tr.comprehensiveIncome}} - {{tr.comprehensiveDeduction}} = {{tr.taxableIncome}} 元</text>
+          <text class="dhl">综合所得税: {{tr.comprehensiveTax}} 元 (税率{{tr.comprehensiveBracket}})</text>
         </view>
 
         <view class="det">
           <text class="dh">【最终结果】</text>
-          <text class="dhl">年度总个税 = {{comprehensiveTax}} + {{businessTax}} + {{proportionalTax}} = {{taxTotal}} 元</text>
+          <text class="dhl">年度总个税 = {{tr.comprehensiveTax}} + {{tr.businessTax}} + {{tr.proportionalTax}} = {{tr.totalTax}} 元</text>
         </view>
       </view>
 
@@ -181,12 +181,11 @@ import { calcSocial, calcFlex, calcTax, calcTakeHome, fmt } from '../../utils/ca
 
 export default {
   data() {
-    var cfg = loadConfig()
     var inp = loadInput()
     return {
       tab: inp._ltab || 0,
       sub: inp._lsub || 0,
-      cfg: cfg,
+      cfg: loadConfig(),
       salary: inp.salary || '10000',
       fundBase: inp.fundBase || '',
       fundRate: inp.fundRate || '5',
@@ -211,46 +210,52 @@ export default {
     }
   },
   computed: {
-    socialResult() {
+    // 社保结果
+    r() {
       var s = parseFloat(this.salary) || 0
       var fb = parseFloat(this.fundBase) || s
       var fr = parseFloat(this.fundRate) || 5
-      return calcSocial(s, fb, fr, this.cfg)
-    },
-    socialBase() { return fmt(this.socialResult.base) },
-    fundBaseResult() { return fmt(this.socialResult.fundBase) },
-    employerPension() { return fmt(this.socialResult.ep) },
-    employerMedical() { return fmt(this.socialResult.em) },
-    employerUnemployment() { return fmt(this.socialResult.eu) },
-    employerInjury() { return fmt(this.socialResult.ei) },
-    employerFund() { return fmt(this.socialResult.ef) },
-    employerTotal() { return fmt(this.socialResult.et) },
-    employeePension() { return fmt(this.socialResult.pp) },
-    employeeMedical() { return fmt(this.socialResult.pm) },
-    employeeUnemployment() { return fmt(this.socialResult.pu) },
-    employeeFund() { return fmt(this.socialResult.pf) },
-    personalTotal() { return fmt(this.socialResult.pt) },
-    personalYearSocial() { return fmt(this.socialResult.yearPt) },
+      var social = calcSocial(s, fb, fr, this.cfg)
 
-    flexResult() {
-      return calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
-    },
-    flexTotal() { return fmt(this.flexResult.t) },
-    flexPension() { return fmt(this.flexResult.p) },
-    flexMedical() { return fmt(this.flexResult.m) },
+      var taxInput = {
+        salary: s * 12, labor: 0, author: 0, royalty: 0,
+        business: 0, dividend: 0, rent: 0, rentDeduction: 0,
+        transfer: 0, transferCost: 0, luck: 0, social: social.yearPt,
+        childEducation: 0, continuingEducation: 0, housingLoan: 0,
+        housingRent: 0, elderlySupport: 0, infantCare: 0
+      }
+      var tax = calcTax(taxInput, this.cfg)
+      var takeHome = calcTakeHome(s, social.pt, tax.monthlyTax)
 
+      return {
+        base: fmt(social.base), fb: fmt(social.fundBase),
+        ep: fmt(social.ep), em: fmt(social.em), eu: fmt(social.eu), ei: fmt(social.ei), ef: fmt(social.ef), et: fmt(social.et),
+        pp: fmt(social.pp), pm: fmt(social.pm), pu: fmt(social.pu), pf: fmt(social.pf), pt: fmt(social.pt),
+        yearPt: fmt(social.yearPt), takeHome: fmt(takeHome), monthlyTax: fmt(tax.monthlyTax)
+      }
+    },
+
+    // 灵活就业
+    fr() {
+      var res = calcFlex(parseFloat(this.flexBase)||0, parseFloat(this.flexPen)||20, parseFloat(this.flexMed)||8, this.cfg)
+      return { total: fmt(res.t), p: fmt(res.p), m: fmt(res.m) }
+    },
+
+    // 专项附加合计
     specialTotal() {
       return ((parseFloat(this.tChild)||0)+(parseFloat(this.tEdu)||0)+
         (parseFloat(this.tLoan)||0)+(parseFloat(this.tRentDeduction)||0)+
         (parseFloat(this.tElder)||0)+(parseFloat(this.tBaby)||0))*12
     },
-    taxResult() {
-      var socialYear = this.socialResult.yearPt
-      return calcTax({
-        salary: (parseFloat(this.tSalary)||0)*12,
-        labor: (parseFloat(this.tLabor)||0)*12,
-        author: (parseFloat(this.tAuthor)||0)*12,
-        royalty: (parseFloat(this.tRoyalty)||0)*12,
+
+    // 个税结果
+    tr() {
+      var social = calcSocial(parseFloat(this.salary)||0, parseFloat(this.fundBase)||parseFloat(this.salary)||0, parseFloat(this.fundRate)||5, this.cfg)
+      var taxInput = {
+        salary: (parseFloat(this.tSalary)||0) * 12,
+        labor: (parseFloat(this.tLabor)||0) * 12,
+        author: (parseFloat(this.tAuthor)||0) * 12,
+        royalty: (parseFloat(this.tRoyalty)||0) * 12,
         business: parseFloat(this.tBusiness)||0,
         dividend: parseFloat(this.tDividend)||0,
         rent: parseFloat(this.tRent)||0,
@@ -258,32 +263,25 @@ export default {
         transfer: parseFloat(this.tTransfer)||0,
         transferCost: 0,
         luck: parseFloat(this.tLuck)||0,
-        social: socialYear,
+        social: social.yearPt,
         childEducation: (parseFloat(this.tChild)||0)*12,
         continuingEducation: (parseFloat(this.tEdu)||0)*12,
         housingLoan: (parseFloat(this.tLoan)||0)*12,
         housingRent: (parseFloat(this.tRentDeduction)||0)*12,
         elderlySupport: (parseFloat(this.tElder)||0)*12,
         infantCare: (parseFloat(this.tBaby)||0)*12
-      }, this.cfg)
-    },
-    taxTotal() { return fmt(this.taxResult.totalTax) },
-    taxMonthly() { return fmt(this.taxResult.monthlyTax) },
-    comprehensiveIncome() { return fmt(this.taxResult.comprehensiveIncome) },
-    comprehensiveDeduction() { return fmt(this.taxResult.comprehensiveDeduction) },
-    taxableIncome() { return fmt(this.taxResult.comprehensiveTaxable) },
-    comprehensiveTax() { return fmt(this.taxResult.comprehensiveTax) },
-    comprehensiveBracket() { return this.taxResult.comprehensiveBracket },
-    businessTax() { return fmt(this.taxResult.businessTax) },
-    proportionalTax() { return fmt(this.taxResult.proportionalTax) },
-
-    takeHome() {
-      var s = parseFloat(this.salary) || 0
-      var pt = this.socialResult.pt
-      var mt = this.taxResult.monthlyTax
-      return fmt(calcTakeHome(s, pt, mt))
-    },
-    monthlyTax() { return this.taxMonthly }
+      }
+      var res = calcTax(taxInput, this.cfg)
+      return {
+        totalTax: fmt(res.totalTax), monthlyTax: fmt(res.monthlyTax),
+        comprehensiveIncome: fmt(res.comprehensiveIncome),
+        comprehensiveDeduction: fmt(res.comprehensiveDeduction),
+        taxableIncome: fmt(res.comprehensiveTaxable),
+        comprehensiveTax: fmt(res.comprehensiveTax),
+        comprehensiveBracket: res.comprehensiveBracket,
+        businessTax: fmt(res.businessTax), proportionalTax: fmt(res.proportionalTax)
+      }
+    }
   },
   onLoad() { this.cfg = loadConfig() },
   onShow() { this.cfg = loadConfig() },
