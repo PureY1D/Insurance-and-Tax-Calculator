@@ -6,8 +6,8 @@ function fix(n) { return Math.round(n * 100) / 100 }
 export function calcSocial(salary, fundBase, fundRate, cfg) {
   var s = cfg.social
   var base = Math.max(s.baseMin, Math.min(s.baseMax, salary))
-  var fb = fundBase ? Math.max(s.baseMin, Math.min(s.baseMax, fundBase)) : base
-  var fr = Math.max(s.fundMin, Math.min(s.fundMax, fundRate))
+  var fb = fundBase ? Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, fundBase)) : Math.max(s.fundBaseMin, Math.min(s.fundBaseMax, salary))
+  var fr = Math.max(s.fundRateMin, Math.min(s.fundRateMax, fundRate))
 
   var ep = fix(base * s.employerPension / 100)
   var em = fix(base * s.employerMedical / 100)
@@ -27,7 +27,7 @@ export function calcSocial(salary, fundBase, fundRate, cfg) {
     fundBase: fb,
     ep: ep, em: em, eu: eu, ei: ei, ef: ef, et: et,
     pp: pp, pm: pm, pu: pu, pf: pf, pt: pt,
-    yearPt: fix(pt * 12)  // 年度个人社保总额
+    yearPt: fix(pt * 12)
   }
 }
 
@@ -42,34 +42,36 @@ export function calcFlex(base, penRate, medRate, cfg) {
 
 // 个税计算
 export function calcTax(input, cfg) {
-  var t = cfg.tax
-
-  // 1. 综合所得
   var salary = input.salary || 0
   var labor = input.labor || 0
   var author = input.author || 0
   var royalty = input.royalty || 0
+  var business = input.business || 0
+  var dividend = input.dividend || 0
+  var rent = input.rent || 0
+  var rentDeduction = input.rentDeduction || 0
+  var transfer = input.transfer || 0
+  var transferCost = input.transferCost || 0
+  var luck = input.luck || 0
+  var social = input.social || 0
+  var childEducation = input.childEducation || 0
+  var continuingEducation = input.continuingEducation || 0
+  var housingLoan = input.housingLoan || 0
+  var housingRent = input.housingRent || 0
+  var elderlySupport = input.elderlySupport || 0
+  var infantCare = input.infantCare || 0
+
+  var t = cfg.tax
 
   var laborTax = fix(labor * 0.8)
   var authorTax = fix(author * 0.8 * 0.7)
   var royaltyTax = fix(royalty * 0.8)
   var comprehensiveIncome = fix(salary + laborTax + authorTax + royaltyTax)
 
-  // 2. 扣除项目
-  var basicDeduction = t.basicDeduction
-  var socialDeduction = input.social || 0
-  var specialTotal = fix(
-    (input.childEducation || 0) + (input.continuingEducation || 0) +
-    (input.housingLoan || 0) + (input.housingRent || 0) +
-    (input.elderlySupport || 0) + (input.infantCare || 0)
-  ) * 12
+  var specialTotal = fix(childEducation + continuingEducation + housingLoan + housingRent + elderlySupport + infantCare) * 12
 
-  // 3. 综合所得应纳税所得额
-  var comprehensiveTaxable = Math.max(0, fix(
-    comprehensiveIncome - basicDeduction - socialDeduction - specialTotal
-  ))
+  var comprehensiveTaxable = Math.max(0, fix(comprehensiveIncome - t.basicDeduction - social - specialTotal))
 
-  // 4. 综合所得税
   var comprehensiveTax = 0
   var comprehensiveBracket = ''
   var brackets = t.brackets
@@ -81,46 +83,34 @@ export function calcTax(input, cfg) {
     }
   }
 
-  // 5. 经营所得
-  var businessIncome = input.business || 0
   var businessTax = 0
   var businessBracket = ''
   var bBrackets = t.businessBrackets
   for (var i = 0; i < bBrackets.length; i++) {
-    if (bBrackets[i].max === null || businessIncome <= bBrackets[i].max) {
-      businessTax = fix(businessIncome * bBrackets[i].rate / 100 - bBrackets[i].deduction)
+    if (bBrackets[i].max === null || business <= bBrackets[i].max) {
+      businessTax = fix(business * bBrackets[i].rate / 100 - bBrackets[i].deduction)
       businessBracket = bBrackets[i].rate + '%'
       break
     }
   }
 
-  // 6. 比例税率所得
-  var dividend = input.dividend || 0
-  var rentIncome = input.rent || 0
-  var rentDeduction = input.rentDeduction || 0
-  var transferIncome = input.transfer || 0
-  var transferCost = input.transferCost || 0
-  var luck = input.luck || 0
-
-  var rentTaxable = Math.max(0, fix(rentIncome - rentDeduction))
-  var transferTaxable = Math.max(0, fix(transferIncome - transferCost))
-
   var dividendTax = fix(dividend * 0.2)
+  var rentTaxable = Math.max(0, fix(rent - rentDeduction))
   var rentTax = fix(rentTaxable * 0.2)
+  var transferTaxable = Math.max(0, fix(transfer - transferCost))
   var transferTax = fix(transferTaxable * 0.2)
   var luckTax = fix(luck * 0.2)
   var proportionalTax = fix(dividendTax + rentTax + transferTax + luckTax)
 
-  // 7. 合计
   var totalTax = fix(comprehensiveTax + businessTax + proportionalTax)
 
   return {
     comprehensiveIncome: comprehensiveIncome,
-    comprehensiveDeduction: fix(basicDeduction + socialDeduction + specialTotal),
+    comprehensiveDeduction: fix(t.basicDeduction + social + specialTotal),
     comprehensiveTaxable: comprehensiveTaxable,
     comprehensiveTax: comprehensiveTax,
     comprehensiveBracket: comprehensiveBracket,
-    businessIncome: businessIncome,
+    businessIncome: business,
     businessTax: businessTax,
     businessBracket: businessBracket,
     dividendTax: dividendTax,
@@ -133,9 +123,8 @@ export function calcTax(input, cfg) {
   }
 }
 
-// 计算到手工资（含个税）
-export function calcTakeHome(salary, personalSocial, monthlyTax) {
-  return fix(salary - personalSocial - monthlyTax)
+export function calcTakeHome(salary, social, monthlyTax) {
+  return fix(salary - social - monthlyTax)
 }
 
 export function fmt(n) { return fix(n).toFixed(2) }

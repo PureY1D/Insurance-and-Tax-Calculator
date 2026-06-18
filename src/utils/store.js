@@ -3,7 +3,7 @@
 var CONFIG_KEY = 'itc_v4_config'
 var INPUT_KEY = 'itc_v4_input'
 
-// 默认配置（宁波2024）
+// 默认配置（宁波2026）
 var DEFAULT_CONFIG = {
   social: {
     baseMin: 4986,
@@ -15,8 +15,10 @@ var DEFAULT_CONFIG = {
     employeePension: 8,
     employeeMedical: 2,
     employeeUnemployment: 0.5,
-    fundMin: 5,
-    fundMax: 12
+    fundBaseMin: 2280,
+    fundBaseMax: 36621,
+    fundRateMin: 5,
+    fundRateMax: 12
   },
   flexible: {
     baseMin: 4986,
@@ -55,31 +57,28 @@ var DEFAULT_CONFIG = {
 
 // 默认输入数据
 var DEFAULT_INPUT = {
-  // 社保页输入
-  hasSocial: 'false',  // 是否缴纳五险一金
-  salary: '10000',
-  fundBase: '',      // 空表示等于工资
-  fundRate: '5',
-  // 灵活就业
-  flexBase: '4986',
-  flexPen: '20',
-  flexMed: '8',
-  // 个税页输入
-  tSalary: '10000',  // 与社保页工资同步
-  tLabor: '0',
-  tAuthor: '0',
-  tRoyalty: '0',
-  tBusiness: '0',
-  tDividend: '0',
-  tRent: '0',
-  tTransfer: '0',
-  tLuck: '0',
-  tChild: '0',
-  tEdu: '0',
-  tLoan: '0',
-  tRentDeduction: '0',
-  tElder: '0',
-  tBaby: '0'
+  hasSocial: 'false',
+  salary: '',
+  fundBase: '',
+  fundRate: '',
+  flexBase: '',
+  flexPen: '',
+  flexMed: '',
+  tSalary: '',
+  tLabor: '',
+  tAuthor: '',
+  tRoyalty: '',
+  tBusiness: '',
+  tDividend: '',
+  tRent: '',
+  tTransfer: '',
+  tLuck: '',
+  tChild: '',
+  tEdu: '',
+  tLoan: '',
+  tRentDeduction: '',
+  tElder: '',
+  tBaby: ''
 }
 
 // 配置相关
