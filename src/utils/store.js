@@ -42,7 +42,7 @@ var DEFAULT_INP = {
   hasFund: false,
   salary: '', fundBase: '', fundRate: '',
   flexBase: '', flexPen: '', flexMed: '',
-  tSalary: '', tLabor: '', tAuthor: '', tRoyalty: '',
+  tLabor: '', tAuthor: '', tRoyalty: '',
   tBusiness: '', tDividend: '', tRent: '', tTransfer: '', tLuck: '',
   tChild: '', tEdu: '', tLoan: '', tRentDeduction: '', tElder: '', tBaby: ''
 }

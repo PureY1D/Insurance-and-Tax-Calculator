@@ -18,7 +18,7 @@
           <text class="card-title">输入参数</text>
           <view class="row">
             <text class="lbl">税前工资</text>
-            <input class="ipt" type="digit" :value="salary" @input="onSalaryChange"/>
+            <input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/>
             <text class="ut">元/月</text>
           </view>
           <view class="check" @click="hasFund=!hasFund">
@@ -133,7 +133,7 @@
     <view v-show="tab===1" class="body">
       <view class="card">
         <text class="card-title">综合所得（元/月）</text>
-        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="onTSalaryChange"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="tLabor=$event.detail.value"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="tAuthor=$event.detail.value"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="tRoyalty=$event.detail.value"/><text class="ut">元</text></view>
@@ -221,7 +221,7 @@ export default {
       tab: 0, sub: 0, cfg: null,
       hasFund: false, salary: '', fundBase: '', fundRate: '',
       flexBase: '', flexPen: '', flexMed: '',
-      tSalary: '', tLabor: '', tAuthor: '', tRoyalty: '',
+      tLabor: '', tAuthor: '', tRoyalty: '',
       tBusiness: '', tDividend: '', tRent: '', tTransfer: '', tLuck: '',
       yearSocial: '0',
       tChild: '', tEdu: '', tLoan: '', tRentDeduction: '', tElder: '', tBaby: '',
@@ -238,7 +238,6 @@ export default {
     flexBase: function() { this.doFlex() },
     flexPen: function() { this.doFlex() },
     flexMed: function() { this.doFlex() },
-    tSalary: function() { this.doTax() },
     tLabor: function() { this.doTax() },
     tAuthor: function() { this.doTax() },
     tRoyalty: function() { this.doTax() },
@@ -267,7 +266,6 @@ export default {
       this.flexBase = inp.flexBase || ''
       this.flexPen = inp.flexPen || ''
       this.flexMed = inp.flexMed || ''
-      this.tSalary = inp.tSalary || ''
       this.tLabor = inp.tLabor || ''
       this.tAuthor = inp.tAuthor || ''
       this.tRoyalty = inp.tRoyalty || ''
@@ -286,16 +284,8 @@ export default {
       this.doFlex()
       this.doTax()
     },
-    onSalaryChange: function(e) {
+    onSalaryInput: function(e) {
       this.salary = e.detail.value
-      this.tSalary = e.detail.value  // 双向联动
-      this.doCalc()
-      this.doTax()
-      this.save()
-    },
-    onTSalaryChange: function(e) {
-      this.tSalary = e.detail.value
-      this.salary = e.detail.value  // 双向联动
       this.doCalc()
       this.doTax()
       this.save()
@@ -303,11 +293,7 @@ export default {
     doCalc: function() {
       if (!this.cfg) return
       var s = parseFloat(this.salary) || 0
-
-      // 五险
       var ins = calcInsurance(s, this.cfg)
-
-      // 公积金
       var pf = 0
       var fr = 0
       if (this.hasFund) {
@@ -315,8 +301,6 @@ export default {
         pf = fund.pf
         fr = fmt(fund.rate * 100)
       }
-
-      // 个税（简化计算）
       var total = fix(ins.total + pf)
       var yearSocial = fix(ins.yearTotal + fix(pf * 12))
       var taxInput = {
@@ -327,7 +311,6 @@ export default {
       }
       var tax = calcTax(taxInput, this.cfg)
       var monthlyTax = tax.monthlyTax
-
       this.yearSocial = fmt(yearSocial)
       this.r = {
         takeHome: fmt(fix(s - total - monthlyTax)),
@@ -344,7 +327,7 @@ export default {
     },
     doTax: function() {
       if (!this.cfg) return
-      var s = parseFloat(this.tSalary) || 0
+      var s = parseFloat(this.salary) || 0
       var ys = parseFloat(this.yearSocial) || 0
       var sp = ((parseFloat(this.tChild) || 0) + (parseFloat(this.tEdu) || 0) + (parseFloat(this.tLoan) || 0) + (parseFloat(this.tRentDeduction) || 0) + (parseFloat(this.tElder) || 0) + (parseFloat(this.tBaby) || 0)) * 12
       var res = calcTax({
@@ -370,7 +353,7 @@ export default {
         hasFund: this.hasFund,
         salary: this.salary, fundBase: this.fundBase, fundRate: this.fundRate,
         flexBase: this.flexBase, flexPen: this.flexPen, flexMed: this.flexMed,
-        tSalary: this.tSalary, tLabor: this.tLabor, tAuthor: this.tAuthor, tRoyalty: this.tRoyalty,
+        tLabor: this.tLabor, tAuthor: this.tAuthor, tRoyalty: this.tRoyalty,
         tBusiness: this.tBusiness, tDividend: this.tDividend, tRent: this.tRent,
         tTransfer: this.tTransfer, tLuck: this.tLuck,
         tChild: this.tChild, tEdu: this.tEdu, tLoan: this.tLoan,
