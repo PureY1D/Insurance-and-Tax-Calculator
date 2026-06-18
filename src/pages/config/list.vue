@@ -2,7 +2,6 @@
   <view class="page">
     <text class="tip">💡 修改参数后自动保存</text>
 
-    <!-- 社保参数 -->
     <view class="card">
       <text class="card-title">社保参数</text>
       <text class="sec-title">缴费基数</text>
@@ -19,107 +18,49 @@
 
       <text class="sec-title">单位缴费比例 (%)</text>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">养老保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employerPension" @input="onSocialInput('employerPension',$event)"/>
-          <text class="hint">法定: 14%~16%</text>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">医疗保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employerMedical" @input="onSocialInput('employerMedical',$event)"/>
-          <text class="hint">法定: 7%~9%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">养老保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employerPension" @input="onSocialInput('employerPension',$event)"/><text class="hint">14%~16%</text></view>
+        <view class="half"><text class="lbl-sm">医疗保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employerMedical" @input="onSocialInput('employerMedical',$event)"/><text class="hint">7%~9%</text></view>
       </view>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">失业保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employerUnemployment" @input="onSocialInput('employerUnemployment',$event)"/>
-          <text class="hint">法定: 0.3%~0.8%</text>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">工伤保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employerInjury" @input="onSocialInput('employerInjury',$event)"/>
-          <text class="hint">法定: 0.2%~1.9%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">失业保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employerUnemployment" @input="onSocialInput('employerUnemployment',$event)"/><text class="hint">0.3%~0.8%</text></view>
+        <view class="half"><text class="lbl-sm">工伤保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employerInjury" @input="onSocialInput('employerInjury',$event)"/><text class="hint">0.2%~1.9%</text></view>
       </view>
 
       <text class="sec-title">个人缴费比例 (%)</text>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">养老保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employeePension" @input="onSocialInput('employeePension',$event)"/>
-          <text class="hint">法定: 8%</text>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">医疗保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employeeMedical" @input="onSocialInput('employeeMedical',$event)"/>
-          <text class="hint">法定: 2%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">养老保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employeePension" @input="onSocialInput('employeePension',$event)"/><text class="hint">8%</text></view>
+        <view class="half"><text class="lbl-sm">医疗保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employeeMedical" @input="onSocialInput('employeeMedical',$event)"/><text class="hint">2%</text></view>
       </view>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">失业保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.employeeUnemployment" @input="onSocialInput('employeeUnemployment',$event)"/>
-          <text class="hint">法定: 0.5%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">失业保险</text><input class="ipt-sm" type="digit" :value="cfg.social.employeeUnemployment" @input="onSocialInput('employeeUnemployment',$event)"/><text class="hint">0.5%</text></view>
         <view class="half"></view>
       </view>
 
       <text class="sec-title">公积金</text>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">基数下限</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.fundBaseMin" @input="onSocialInput('fundBaseMin',$event)"/>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">基数上限</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.fundBaseMax" @input="onSocialInput('fundBaseMax',$event)"/>
-        </view>
+        <view class="half"><text class="lbl-sm">基数下限</text><input class="ipt-sm" type="digit" :value="cfg.social.fundBaseMin" @input="onSocialInput('fundBaseMin',$event)"/></view>
+        <view class="half"><text class="lbl-sm">基数上限</text><input class="ipt-sm" type="digit" :value="cfg.social.fundBaseMax" @input="onSocialInput('fundBaseMax',$event)"/></view>
       </view>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">最低比例</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.fundRateMin" @input="onSocialInput('fundRateMin',$event)"/>
-          <text class="hint">法定: 5%</text>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">最高比例</text>
-          <input class="ipt-sm" type="digit" :value="cfg.social.fundRateMax" @input="onSocialInput('fundRateMax',$event)"/>
-          <text class="hint">法定: 12%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">最低比例</text><input class="ipt-sm" type="digit" :value="cfg.social.fundRateMin" @input="onSocialInput('fundRateMin',$event)"/><text class="hint">5%</text></view>
+        <view class="half"><text class="lbl-sm">最高比例</text><input class="ipt-sm" type="digit" :value="cfg.social.fundRateMax" @input="onSocialInput('fundRateMax',$event)"/><text class="hint">12%</text></view>
       </view>
     </view>
 
-    <!-- 灵活就业参数 -->
     <view class="card">
       <text class="card-title">灵活就业参数</text>
       <text class="sec-title">缴费基数范围</text>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">基数下限</text>
-          <input class="ipt-sm" type="digit" :value="cfg.flexible.baseMin" @input="onFlexibleInput('baseMin',$event)"/>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">基数上限</text>
-          <input class="ipt-sm" type="digit" :value="cfg.flexible.baseMax" @input="onFlexibleInput('baseMax',$event)"/>
-        </view>
+        <view class="half"><text class="lbl-sm">基数下限</text><input class="ipt-sm" type="digit" :value="cfg.flexible.baseMin" @input="onFlexibleInput('baseMin',$event)"/></view>
+        <view class="half"><text class="lbl-sm">基数上限</text><input class="ipt-sm" type="digit" :value="cfg.flexible.baseMax" @input="onFlexibleInput('baseMax',$event)"/></view>
       </view>
       <text class="sec-title">缴费比例 (%)</text>
       <view class="row2">
-        <view class="half">
-          <text class="lbl-sm">养老保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.flexible.pensionRate" @input="onFlexibleInput('pensionRate',$event)"/>
-          <text class="hint">法定: 20%~28%</text>
-        </view>
-        <view class="half">
-          <text class="lbl-sm">医疗保险</text>
-          <input class="ipt-sm" type="digit" :value="cfg.flexible.medicalRate" @input="onFlexibleInput('medicalRate',$event)"/>
-          <text class="hint">法定: 8%~12%</text>
-        </view>
+        <view class="half"><text class="lbl-sm">养老保险</text><input class="ipt-sm" type="digit" :value="cfg.flexible.pensionRate" @input="onFlexibleInput('pensionRate',$event)"/><text class="hint">20%~28%</text></view>
+        <view class="half"><text class="lbl-sm">医疗保险</text><input class="ipt-sm" type="digit" :value="cfg.flexible.medicalRate" @input="onFlexibleInput('medicalRate',$event)"/><text class="hint">8%~12%</text></view>
       </view>
     </view>
 
-    <!-- 个税参数 -->
     <view class="card">
       <text class="card-title">个税参数</text>
       <view class="row">
@@ -129,7 +70,6 @@
       </view>
     </view>
 
-    <!-- 恢复默认 -->
     <view class="card">
       <view class="rst-btn" @click="doReset"><text class="rst-txt">🔄 恢复默认配置</text></view>
     </view>
@@ -141,7 +81,19 @@ import { loadCfg, saveCfg, resetCfg } from '../../utils/store'
 
 export default {
   data: function() {
-    return { cfg: null }
+    return {
+      cfg: {
+        social: {
+          baseMin: 4986, baseMax: 38907,
+          employerPension: 14, employerMedical: 7, employerUnemployment: 0.3, employerInjury: 0.2,
+          employeePension: 8, employeeMedical: 2, employeeUnemployment: 0.5,
+          fundBaseMin: 2280, fundBaseMax: 36621,
+          fundRateMin: 5, fundRateMax: 12
+        },
+        flexible: { baseMin: 4986, baseMax: 38907, pensionRate: 20, medicalRate: 8 },
+        tax: { basicDeduction: 60000, brackets: [], businessBrackets: [] }
+      }
+    }
   },
   onLoad: function() { this.cfg = loadCfg() },
   onShow: function() { this.cfg = loadCfg() },
@@ -161,8 +113,7 @@ export default {
     doReset: function() {
       var that = this
       uni.showModal({
-        title: '恢复默认',
-        content: '确定恢复默认配置？',
+        title: '恢复默认', content: '确定恢复默认配置？',
         success: function(res) {
           if (res.confirm) {
             resetCfg()

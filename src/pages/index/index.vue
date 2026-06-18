@@ -1,6 +1,5 @@
 <template>
   <view class="page">
-    <!-- 顶部Tab -->
     <view class="top-tabs">
       <text :class="tab===0?'top-tab on':'top-tab'" @click="tab=0">社保缴费</text>
       <text :class="tab===1?'top-tab on':'top-tab'" @click="tab=1">个人所得税</text>
@@ -8,7 +7,6 @@
 
     <!-- 社保页 -->
     <view v-show="tab===0" class="body">
-      <!-- 子Tab -->
       <view class="sub-tabs">
         <text :class="sub===0?'sub-tab on':'sub-tab'" @click="sub=0">企业职工</text>
         <text :class="sub===1?'sub-tab on':'sub-tab'" @click="sub=1">灵活就业</text>
@@ -20,7 +18,7 @@
           <text class="card-title">输入参数</text>
           <view class="row">
             <text class="lbl">税前工资</text>
-            <input class="ipt" type="digit" :value="salary" @input="salary=$event.detail.value"/>
+            <input class="ipt" type="digit" :value="salary" @input="onSalaryChange"/>
             <text class="ut">元/月</text>
           </view>
           <view class="check" @click="hasFund=!hasFund">
@@ -47,10 +45,6 @@
             <text class="know-t">五险缴费比例</text>
             <text class="know-c">• 养老：单位14%，个人8%\n• 医疗：单位7%，个人2%\n• 失业：单位0.3%，个人0.5%\n• 工伤：单位0.2%，个人不缴</text>
           </view>
-          <view v-if="hasFund" class="know">
-            <text class="know-t">公积金规则</text>
-            <text class="know-c">• 基数范围：{{cfg.social.fundBaseMin}} ~ {{cfg.social.fundBaseMax}} 元\n• 比例范围：{{cfg.social.fundRateMin}}% ~ {{cfg.social.fundRateMax}}%\n• 可单独设置基数，默认等于工资</text>
-          </view>
         </view>
 
         <view class="card">
@@ -61,12 +55,12 @@
               <text class="result-val">{{r.takeHome}}</text>
             </view>
             <view class="result-item">
-              <text class="result-lbl">个人扣除</text>
+              <text class="result-lbl">总扣除</text>
               <text class="result-val red">{{r.total}}</text>
             </view>
           </view>
 
-          <text class="sec-title">五险扣除明细</text>
+          <text class="sec-title">扣除明细</text>
           <view class="det">
             <view class="det-row"><text class="det-lbl">养老保险 (8%)</text><text class="det-val">{{r.pp}}</text></view>
             <view class="det-row"><text class="det-lbl">医疗保险 (2%)</text><text class="det-val">{{r.pm}}</text></view>
@@ -75,9 +69,16 @@
           </view>
 
           <view v-if="hasFund">
-            <text class="sec-title">公积金扣除明细</text>
+            <text class="sec-title">公积金</text>
             <view class="det">
               <view class="det-row"><text class="det-lbl">公积金 ({{r.fundRate}}%)</text><text class="det-val">{{r.pf}}</text></view>
+            </view>
+          </view>
+
+          <view>
+            <text class="sec-title">个人所得税</text>
+            <view class="det">
+              <view class="det-row"><text class="det-lbl">月度个税</text><text class="det-val">{{r.monthlyTax}}</text></view>
             </view>
           </view>
         </view>
@@ -132,7 +133,7 @@
     <view v-show="tab===1" class="body">
       <view class="card">
         <text class="card-title">综合所得（元/月）</text>
-        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="tSalary=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="tSalary" @input="onTSalaryChange"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="tLabor=$event.detail.value"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="tAuthor=$event.detail.value"/><text class="ut">元</text></view>
         <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="tRoyalty=$event.detail.value"/><text class="ut">元</text></view>
@@ -212,6 +213,8 @@
 import { loadCfg, loadInp, saveInp } from '../../utils/store'
 import { calcInsurance, calcFund, calcFlex, calcTax, fmt } from '../../utils/calc'
 
+function fix(n) { return Math.round(n * 100) / 100 }
+
 export default {
   data: function() {
     return {
@@ -222,7 +225,7 @@ export default {
       tBusiness: '', tDividend: '', tRent: '', tTransfer: '', tLuck: '',
       yearSocial: '0',
       tChild: '', tEdu: '', tLoan: '', tRentDeduction: '', tElder: '', tBaby: '',
-      r: { takeHome: '0', total: '0', pp: '0', pm: '0', pu: '0', insTotal: '0', pf: '0', fundRate: '0' },
+      r: { takeHome: '0', total: '0', pp: '0', pm: '0', pu: '0', insTotal: '0', pf: '0', fundRate: '0', monthlyTax: '0' },
       fr: { t: '0', p: '0', m: '0' },
       tr: { totalTax: '0', monthlyTax: '0', comprehensiveIncome: '0', comprehensiveDeduction: '0', comprehensiveTaxable: '0', comprehensiveTax: '0', comprehensiveBracket: '', businessTax: '0', proportionalTax: '0' }
     }
@@ -257,20 +260,54 @@ export default {
     init: function() {
       this.cfg = loadCfg()
       var inp = loadInp()
-      this.hasFund = inp.hasFund
-      this.salary = inp.salary; this.fundBase = inp.fundBase; this.fundRate = inp.fundRate
-      this.flexBase = inp.flexBase; this.flexPen = inp.flexPen; this.flexMed = inp.flexMed
-      this.tSalary = inp.tSalary; this.tLabor = inp.tLabor; this.tAuthor = inp.tAuthor; this.tRoyalty = inp.tRoyalty
-      this.tBusiness = inp.tBusiness; this.tDividend = inp.tDividend; this.tRent = inp.tRent
-      this.tTransfer = inp.tTransfer; this.tLuck = inp.tLuck
-      this.tChild = inp.tChild; this.tEdu = inp.tEdu; this.tLoan = inp.tLoan
-      this.tRentDeduction = inp.tRentDeduction; this.tElder = inp.tElder; this.tBaby = inp.tBaby
-      this.doCalc(); this.doFlex(); this.doTax()
+      this.hasFund = inp.hasFund || false
+      this.salary = inp.salary || ''
+      this.fundBase = inp.fundBase || ''
+      this.fundRate = inp.fundRate || ''
+      this.flexBase = inp.flexBase || ''
+      this.flexPen = inp.flexPen || ''
+      this.flexMed = inp.flexMed || ''
+      this.tSalary = inp.tSalary || ''
+      this.tLabor = inp.tLabor || ''
+      this.tAuthor = inp.tAuthor || ''
+      this.tRoyalty = inp.tRoyalty || ''
+      this.tBusiness = inp.tBusiness || ''
+      this.tDividend = inp.tDividend || ''
+      this.tRent = inp.tRent || ''
+      this.tTransfer = inp.tTransfer || ''
+      this.tLuck = inp.tLuck || ''
+      this.tChild = inp.tChild || ''
+      this.tEdu = inp.tEdu || ''
+      this.tLoan = inp.tLoan || ''
+      this.tRentDeduction = inp.tRentDeduction || ''
+      this.tElder = inp.tElder || ''
+      this.tBaby = inp.tBaby || ''
+      this.doCalc()
+      this.doFlex()
+      this.doTax()
+    },
+    onSalaryChange: function(e) {
+      this.salary = e.detail.value
+      this.tSalary = e.detail.value  // 双向联动
+      this.doCalc()
+      this.doTax()
+      this.save()
+    },
+    onTSalaryChange: function(e) {
+      this.tSalary = e.detail.value
+      this.salary = e.detail.value  // 双向联动
+      this.doCalc()
+      this.doTax()
+      this.save()
     },
     doCalc: function() {
       if (!this.cfg) return
       var s = parseFloat(this.salary) || 0
+
+      // 五险
       var ins = calcInsurance(s, this.cfg)
+
+      // 公积金
       var pf = 0
       var fr = 0
       if (this.hasFund) {
@@ -278,13 +315,25 @@ export default {
         pf = fund.pf
         fr = fmt(fund.rate * 100)
       }
+
+      // 个税（简化计算）
       var total = fix(ins.total + pf)
-      this.yearSocial = fmt(ins.yearTotal + fix(pf * 12))
+      var yearSocial = fix(ins.yearTotal + fix(pf * 12))
+      var taxInput = {
+        salary: s * 12, labor: 0, author: 0, royalty: 0,
+        business: 0, dividend: 0, rent: 0, rentDeduction: 0,
+        transfer: 0, transferCost: 0, luck: 0,
+        social: yearSocial, special: 0
+      }
+      var tax = calcTax(taxInput, this.cfg)
+      var monthlyTax = tax.monthlyTax
+
+      this.yearSocial = fmt(yearSocial)
       this.r = {
-        takeHome: fmt(fix(s - total)),
-        total: fmt(total),
+        takeHome: fmt(fix(s - total - monthlyTax)),
+        total: fmt(fix(total + monthlyTax)),
         pp: fmt(ins.pp), pm: fmt(ins.pm), pu: fmt(ins.pu), insTotal: fmt(ins.total),
-        pf: fmt(pf), fundRate: fr
+        pf: fmt(pf), fundRate: fr, monthlyTax: fmt(monthlyTax)
       }
       this.save()
     },
@@ -330,8 +379,6 @@ export default {
     }
   }
 }
-
-function fix(n) { return Math.round(n * 100) / 100 }
 </script>
 
 <style>
