@@ -18,7 +18,7 @@
           <text class="card-title">输入参数</text>
           <view class="row">
             <text class="lbl">税前工资</text>
-            <input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/>
+            <input class="ipt" type="digit" :value="salary" @input="salary=$event.detail.value;doCalc();doTax();save()"/>
             <text class="ut">元/月</text>
           </view>
           <view class="check" @click="hasFund=!hasFund">
@@ -27,12 +27,12 @@
           <view v-if="hasFund">
             <view class="row">
               <text class="lbl">公积金基数</text>
-              <input class="ipt" type="digit" :value="fundBase" @input="fundBase=$event.detail.value" placeholder="默认等于工资"/>
+              <input class="ipt" type="digit" :value="fundBase" @input="fundBase=$event.detail.value;doCalc();save()" placeholder="默认等于工资"/>
               <text class="ut">元</text>
             </view>
             <view class="row">
               <text class="lbl">公积金比例</text>
-              <input class="ipt" type="digit" :value="fundRate" @input="fundRate=$event.detail.value"/>
+              <input class="ipt" type="digit" :value="fundRate" @input="fundRate=$event.detail.value;doCalc();save()"/>
               <text class="ut">%</text>
             </view>
             <text class="tip">💡 公积金基数范围：{{cfg.social.fundBaseMin}} ~ {{cfg.social.fundBaseMax}} 元</text>
@@ -90,17 +90,17 @@
           <text class="card-title">灵活就业社保</text>
           <view class="row">
             <text class="lbl">缴费基数</text>
-            <input class="ipt" type="digit" :value="flexBase" @input="flexBase=$event.detail.value"/>
+            <input class="ipt" type="digit" :value="flexBase" @input="flexBase=$event.detail.value;doFlex()"/>
             <text class="ut">元</text>
           </view>
           <view class="row">
             <text class="lbl">养老比例</text>
-            <input class="ipt" type="digit" :value="flexPen" @input="flexPen=$event.detail.value"/>
+            <input class="ipt" type="digit" :value="flexPen" @input="flexPen=$event.detail.value;doFlex()"/>
             <text class="ut">%</text>
           </view>
           <view class="row">
             <text class="lbl">医保比例</text>
-            <input class="ipt" type="digit" :value="flexMed" @input="flexMed=$event.detail.value"/>
+            <input class="ipt" type="digit" :value="flexMed" @input="flexMed=$event.detail.value;doFlex()"/>
             <text class="ut">%</text>
           </view>
         </view>
@@ -133,30 +133,30 @@
     <view v-show="tab===1" class="body">
       <view class="card">
         <text class="card-title">综合所得（元/月）</text>
-        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="salary" @input="onSalaryInput"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="tLabor=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="tAuthor=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="tRoyalty=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">工资薪金</text><input class="ipt" type="digit" :value="salary" @input="salary=$event.detail.value;doCalc();doTax();save()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">劳务报酬</text><input class="ipt" type="digit" :value="tLabor" @input="tLabor=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">稿酬所得</text><input class="ipt" type="digit" :value="tAuthor" @input="tAuthor=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">特许权使用费</text><input class="ipt" type="digit" :value="tRoyalty" @input="tRoyalty=$event.detail.value;doTax()"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="card-title">其他所得（元/年）</text>
-        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="tBusiness=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="tDividend=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="tRent=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="tTransfer=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="tLuck=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">经营所得</text><input class="ipt" type="digit" :value="tBusiness" @input="tBusiness=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">利息股息红利</text><input class="ipt" type="digit" :value="tDividend" @input="tDividend=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产租赁</text><input class="ipt" type="digit" :value="tRent" @input="tRent=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">财产转让</text><input class="ipt" type="digit" :value="tTransfer" @input="tTransfer=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">偶然所得</text><input class="ipt" type="digit" :value="tLuck" @input="tLuck=$event.detail.value;doTax()"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
         <text class="card-title">扣除项目</text>
         <view class="row"><text class="lbl">个人社保/年</text><text class="val">{{yearSocial}} 元</text><text class="sync">自动同步</text></view>
-        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="tChild=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="tEdu=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="tLoan=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="tRentDeduction=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="tElder=$event.detail.value"/><text class="ut">元</text></view>
-        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="tBaby=$event.detail.value"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">子女教育/月</text><input class="ipt" type="digit" :value="tChild" @input="tChild=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">继续教育/月</text><input class="ipt" type="digit" :value="tEdu" @input="tEdu=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房贷款/月</text><input class="ipt" type="digit" :value="tLoan" @input="tLoan=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">住房租金/月</text><input class="ipt" type="digit" :value="tRentDeduction" @input="tRentDeduction=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">赡养老人/月</text><input class="ipt" type="digit" :value="tElder" @input="tElder=$event.detail.value;doTax()"/><text class="ut">元</text></view>
+        <view class="row"><text class="lbl">婴幼儿照护/月</text><input class="ipt" type="digit" :value="tBaby" @input="tBaby=$event.detail.value;doTax()"/><text class="ut">元</text></view>
       </view>
 
       <view class="card">
@@ -283,12 +283,6 @@ export default {
       this.doCalc()
       this.doFlex()
       this.doTax()
-    },
-    onSalaryInput: function(e) {
-      this.salary = e.detail.value
-      this.doCalc()
-      this.doTax()
-      this.save()
     },
     doCalc: function() {
       if (!this.cfg) return
